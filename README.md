@@ -37,7 +37,7 @@ incorrect sub-string matching:
 1. `curie` the compact uniform resource identifier (CURIE) for a biomedical
    entity or concept that **does not** match the following text, standardized
    using the Bioregistry
-2. `text` the non-synonym text itself
+2. `negative_text` the non-synonym text itself
 3. `references` same as for `synonyms.tsv`, illustrating documents where this
    string appears
 
