@@ -48,6 +48,12 @@ CURIEs):
 |-------------------------------------------------|-------------|----------------------------------------------------------------------------------------------------------------------|
 | [hgnc:22979](https://bioregistry.io/hgnc:22979) | PI(3,4,5)P3 | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | 
 
+## Known Limitations
+
+It's hard to know which exact matches between different vocabularies could be
+used to deduplicate synonyms. Right now, this isn't covered but some partial
+solutions already exist that could be adopted.
+
 ## License
 
 All data are available under CC0 license. All code is available under MIT
