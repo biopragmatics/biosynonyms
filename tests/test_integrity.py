@@ -9,6 +9,12 @@ HERE = Path(__file__).parent.resolve()
 ROOT = HERE.parent.resolve()
 PATH = ROOT.joinpath("synonyms.tsv")
 
+SYNONYM_TYPES = {
+    "skos:exactMatch",
+    "skos:broadMatch",
+    "skos:narrowMatch",
+}
+
 
 class TestIntegrity(unittest.TestCase):
     """Test case for data integrity tests."""
@@ -43,7 +49,10 @@ class TestIntegrity(unittest.TestCase):
         for row_index, row in enumerate(self.rows, start=1):
             with self.subTest(row=row_index):
                 self.assertEquals(4, len(row))
-                self.assert_curie(row[0])
-                for reference in row[3].split(","):
+                curie, text, stype, references = row
+                self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
+                self.assert_curie(curie)
+                self.assertIn(stype, SYNONYM_TYPES)
+                for reference in references.split(","):
                     reference = reference.strip()
                     self.assert_curie(reference)
