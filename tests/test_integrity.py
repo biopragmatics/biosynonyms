@@ -42,7 +42,7 @@ class TestIntegrity(unittest.TestCase):
     def test_positives(self):
         """Test each row in the positives file."""
         with POSITIVES_PATH.open() as file:
-            _, rows = [tuple(line.strip().split("\t")) for line in file]
+            _, *rows = [tuple(line.strip().split("\t")) for line in file]
 
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
