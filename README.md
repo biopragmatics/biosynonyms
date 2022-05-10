@@ -24,7 +24,7 @@ columns:
 4. `references` a comma-delimited list of CURIEs corresponding to publications
    that use the given synonym (ideally using highly actionable identifiers from
    semantic spaces like [`pubmed`](https://bioregistry.io/pubmed),
-   [`pmc`](https://bioregistry.io/pmc), [`doi`](https://bioregistry.ip/doi))
+   [`pmc`](https://bioregistry.io/pmc), [`doi`](https://bioregistry.io/doi))
 5. `contributor_orcid` the ORCID identifier of the contributor
 
 Here's an example of some rows in the synonyms table (with linkified CURIEs):
