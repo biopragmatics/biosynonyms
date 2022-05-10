@@ -2,8 +2,7 @@
 
 from pathlib import Path
 
-HERE = Path(__file__).parent.resolve()
-ROOT = HERE.parent.parent.resolve()
+from .resources import NEGATIVES_PATH, POSITIVES_PATH
 
 
 def _sort(path: Path):
@@ -20,8 +19,8 @@ def _sort(path: Path):
 
 
 def _main():
-    _sort(ROOT.joinpath("synonyms.tsv"))
-    _sort(ROOT.joinpath("negatives.tsv"))
+    _sort(POSITIVES_PATH)
+    _sort(NEGATIVES_PATH)
 
 
 if __name__ == '__main__':
