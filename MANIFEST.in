@@ -1,0 +1,19 @@
+graft src
+graft tests
+
+recursive-include docs *.py
+recursive-include docs *.rst
+recursive-include docs Makefile
+recursive-include docs *.png
+recursive-include docs *.svg
+recursive-exclude docs/img *.png
+global-exclude *.py[cod] __pycache__ *.so *.dylib .DS_Store *.gpickle
+
+prune docs/build
+prune docs/_data
+prune exports
+exclude docs/*.md
+exclude docs/_config.yml
+
+exclude .appveyor.yml .bumpversion.cfg readthedocs.yml tox.ini
+include LICENSE *.md *.rst

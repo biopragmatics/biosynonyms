@@ -2,14 +2,10 @@
 
 import unittest
 from collections import Counter
-from pathlib import Path
 
 import bioregistry
 
-HERE = Path(__file__).parent.resolve()
-ROOT = HERE.parent.resolve()
-POSITIVES_PATH = ROOT.joinpath("synonyms.tsv")
-NEGATIVES_PATH = ROOT.joinpath("negatives.tsv")
+from biosynonyms.resources import NEGATIVES_PATH, POSITIVES_PATH
 
 SYNONYM_TYPES = {
     "skos:exactMatch",
