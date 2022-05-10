@@ -4,7 +4,7 @@ from pathlib import Path
 
 __all__ = [
     "POSITIVES_PATH",
-    "NEGATIVES_PATH"
+    "NEGATIVES_PATH",
 ]
 
 HERE = Path(__file__).parent.resolve()

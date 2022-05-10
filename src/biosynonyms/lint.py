@@ -7,15 +7,12 @@ from .resources import NEGATIVES_PATH, POSITIVES_PATH
 
 def _sort(path: Path):
     with path.open() as file:
-        header, *rows = [
-            line.strip().split("\t")
-            for line in file
-        ]
+        header, *rows = [line.strip().split("\t") for line in file]
     rows = sorted(rows)
     with path.open("w") as file:
-        print(*header, sep='\t', file=file)  # noqa:T201
+        print(*header, sep="\t", file=file)  # noqa:T201
         for row in rows:
-            print(*row, sep='\t', file=file)  # noqa:T201
+            print(*row, sep="\t", file=file)  # noqa:T201
 
 
 def _main():
@@ -23,5 +20,5 @@ def _main():
     _sort(NEGATIVES_PATH)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _main()
