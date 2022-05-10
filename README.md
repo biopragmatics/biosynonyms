@@ -14,8 +14,8 @@ columns:
 2. `curie` the compact uniform resource identifier (CURIE) for a biomedical
    entity or concept, standardized using the Bioregistry
 3. `type` the match type, written as a CURIE from
-   the [`oio`](https://bioregistry.io/oio) controlled vocabulary, i.e., one
-   of:
+   the [OBO in OWL (`oio`)](https://bioregistry.io/oio) controlled vocabulary,
+   i.e., one of:
     - `oio:hasExactSynonym`
     - `oio:hasNarrowSynonym`
     - `oio:hasBroadSynonym`
@@ -24,7 +24,7 @@ columns:
 4. `references` a comma-delimited list of CURIEs corresponding to publications
    that use the given synonym (ideally using highly actionable identifiers from
    semantic spaces like [`pubmed`](https://bioregistry.io/pubmed),
-   [`pmc`](https://bioregistry.io/pmc), [`doi`](https://bioregistry.i/doi))
+   [`pmc`](https://bioregistry.io/pmc), [`doi`](https://bioregistry.ip/doi))
 5. `contributor_orcid` the ORCID identifier of the contributor
 
 Here's an example of some rows in the synonyms table (with linkified CURIEs):
