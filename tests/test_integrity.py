@@ -46,14 +46,15 @@ class TestIntegrity(unittest.TestCase):
 
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
-                self.assertEquals(4, len(row))
-                curie, text, stype, references = row
+                self.assertEquals(5, len(row))
+                curie, text, stype, references, orcid = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
                 self.assertIn(stype, SYNONYM_TYPES)
                 for reference in references.split(","):
                     reference = reference.strip()
                     self.assert_curie(reference)
+                self.assert_curie(f"orcid:{orcid}")
 
         # test sorted
         self.assertEqual(sorted(rows), rows, msg="synonyms are not properly sorted")
@@ -70,13 +71,14 @@ class TestIntegrity(unittest.TestCase):
 
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
-                self.assertEquals(3, len(row))
-                curie, text, references = row
+                self.assertEquals(4, len(row))
+                curie, text, references, orcid = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
                 for reference in references.split(","):
                     reference = reference.strip()
                     self.assert_curie(reference)
+                self.assert_curie(f"orcid:{orcid}")
 
         # test sorted
         self.assertEqual(sorted(rows), rows, msg="negative synonyms are not properly sorted")

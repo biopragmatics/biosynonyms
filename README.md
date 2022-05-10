@@ -15,10 +15,11 @@ The [`synonyms.tsv`](synonyms.tsv) has four columns:
     - `skos:exactMatch`
     - `skos:broadMatch`
     - `skos:narrowMatch`
-5. `references` a comma-delimited list of CURIEs corresponding to publications
+4. `references` a comma-delimited list of CURIEs corresponding to publications
    that use the given synonym (ideally using highly actionable identifiers from
    semantic spaces like [`pubmed`](https://bioregistry.io/pubmed),
    [`pmc`](https://bioregistry.io/pmc), [`doi`](https://bioregistry.i/doi))
+5. `contributor_orcid` the ORCID identifier of the contributor
 
 Here's an example of some rows in the synonyms table (with linkified CURIEs):
 
@@ -40,6 +41,7 @@ incorrect sub-string matching:
 2. `negative_text` the non-synonym text itself
 3. `references` same as for `synonyms.tsv`, illustrating documents where this
    string appears
+4. `contributor_orcid` the ORCID identifier of the contributor
 
 Here's an example of some rows in the negative synonyms table (with linkified
 CURIEs):
