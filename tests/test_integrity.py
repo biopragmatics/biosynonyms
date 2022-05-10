@@ -5,7 +5,7 @@ from collections import Counter
 
 import bioregistry
 
-from biosynonyms.resources import NEGATIVES_PATH, POSITIVES_PATH
+from biosynonyms.resources import NEGATIVES_PATH, POSITIVES_PATH, sort_key
 
 SYNONYM_TYPES = {
     "oio:hasExactSynonym",
@@ -55,7 +55,7 @@ class TestIntegrity(unittest.TestCase):
                 self.assert_curie(f"orcid:{orcid}")
 
         # test sorted
-        self.assertEqual(sorted(rows), rows, msg="synonyms are not properly sorted")
+        self.assertEqual(sorted(rows, key=sort_key), rows, msg="synonyms are not properly sorted")
 
         # test no duplicates
         c = Counter(row[:2] for row in rows)
@@ -79,7 +79,9 @@ class TestIntegrity(unittest.TestCase):
                 self.assert_curie(f"orcid:{orcid}")
 
         # test sorted
-        self.assertEqual(sorted(rows), rows, msg="negative synonyms are not properly sorted")
+        self.assertEqual(
+            sorted(rows, key=sort_key), rows, msg="negative synonyms are not properly sorted"
+        )
 
         # test no duplicates
         c = Counter(row[:2] for row in rows)
