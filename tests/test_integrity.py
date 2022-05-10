@@ -5,12 +5,14 @@ from collections import Counter
 
 import bioregistry
 
-from biosynonyms.resources import NEGATIVES_PATH, POSITIVES_PATH
+from biosynonyms.resources import NEGATIVES_PATH, POSITIVES_PATH, sort_key
 
 SYNONYM_TYPES = {
-    "skos:exactMatch",
-    "skos:broadMatch",
-    "skos:narrowMatch",
+    "oio:hasExactSynonym",
+    "oio:hasNarrowSynonym",
+    "oio:hasBroadSynonym",
+    "oio:hasRelatedSynonym",
+    "oio:hasSynonym",
 }
 
 
@@ -47,13 +49,13 @@ class TestIntegrity(unittest.TestCase):
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
                 self.assertIn(stype, SYNONYM_TYPES)
-                for reference in references.split(","):
+                for reference in references.split(",") if references else []:
                     reference = reference.strip()
                     self.assert_curie(reference)
                 self.assert_curie(f"orcid:{orcid}")
 
         # test sorted
-        self.assertEqual(sorted(rows), rows, msg="synonyms are not properly sorted")
+        self.assertEqual(sorted(rows, key=sort_key), rows, msg="synonyms are not properly sorted")
 
         # test no duplicates
         c = Counter(row[:2] for row in rows)
@@ -77,7 +79,9 @@ class TestIntegrity(unittest.TestCase):
                 self.assert_curie(f"orcid:{orcid}")
 
         # test sorted
-        self.assertEqual(sorted(rows), rows, msg="negative synonyms are not properly sorted")
+        self.assertEqual(
+            sorted(rows, key=sort_key), rows, msg="negative synonyms are not properly sorted"
+        )
 
         # test no duplicates
         c = Counter(row[:2] for row in rows)
