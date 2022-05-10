@@ -49,7 +49,7 @@ class TestIntegrity(unittest.TestCase):
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
                 self.assertIn(stype, SYNONYM_TYPES)
-                for reference in references.split(","):
+                for reference in references.split(",") if references else []:
                     reference = reference.strip()
                     self.assert_curie(reference)
                 self.assert_curie(f"orcid:{orcid}")
