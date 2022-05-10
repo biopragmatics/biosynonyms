@@ -14,11 +14,13 @@ columns:
 2`curie` the compact uniform resource identifier (CURIE) for a biomedical
    entity or concept, standardized using the Bioregistry
 3. `type` the match type, written as a CURIE from
-   the [`skos`](https://bioregistry.io/skos) controlled vocabulary, i.e., one
+   the [`oio`](https://bioregistry.io/oio) controlled vocabulary, i.e., one
    of:
-    - `skos:exactMatch`
-    - `skos:broadMatch`
-    - `skos:narrowMatch`
+    - `oio:hasExactSynonym`
+    - `oio:hasNarrowSynonym`
+    - `oio:hasBroadSynonym`
+    - `oio:hasRelatedSynonym`
+    - `oio:hasSynonym`
 4. `references` a comma-delimited list of CURIEs corresponding to publications
    that use the given synonym (ideally using highly actionable identifiers from
    semantic spaces like [`pubmed`](https://bioregistry.io/pubmed),
@@ -29,8 +31,8 @@ Here's an example of some rows in the synonyms table (with linkified CURIEs):
 
 | text                            | curie                                             | type                                                      | references                                                                                                           | contributor_orcid   |
 |---------------------------------|---------------------------------------------------|-----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|---------------------|
-| PI(3,4,5)P3                     | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [skos:exactMatch](https://bioregistry.io/skos:exactMatch) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | 0000-0003-4423-4370 |
-| phosphatidylinositol (3,4,5) P3 | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [skos:exactMatch](https://bioregistry.io/skos:exactMatch) | [pubmed:29695532](https://bioregistry.io/pubmed:29695532)                                                            | 0000-0003-4423-4370 | 
+| PI(3,4,5)P3                     | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | 0000-0003-4423-4370 |
+| phosphatidylinositol (3,4,5) P3 | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29695532](https://bioregistry.io/pubmed:29695532)                                                            | 0000-0003-4423-4370 | 
 
 ### Incorrect Synonyms
 
@@ -39,7 +41,7 @@ columns for non-trivial examples of text strings that aren't synonyms. This
 document doesn't address the same issues as context-based disambiguation, but
 rather helps dscribe issues like incorrect sub-string matching:
 
-1. `negative_text` the non-synonym text itself
+1. `text` the non-synonym text itself
 2. `curie` the compact uniform resource identifier (CURIE) for a biomedical
    entity or concept that **does not** match the following text, standardized
    using the Bioregistry
