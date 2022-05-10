@@ -8,9 +8,11 @@ import bioregistry
 from biosynonyms.resources import NEGATIVES_PATH, POSITIVES_PATH
 
 SYNONYM_TYPES = {
-    "skos:exactMatch",
-    "skos:broadMatch",
-    "skos:narrowMatch",
+    "oio:hasExactSynonym",
+    "oio:hasNarrowSynonym",
+    "oio:hasBroadSynonym",
+    "oio:hasRelatedSynonym",
+    "oio:hasSynonym",
 }
 
 
