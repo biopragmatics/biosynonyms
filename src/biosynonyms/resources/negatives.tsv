@@ -1,2 +1,2 @@
-curie	text	references	contributor_orcid
-hgnc:22979	PI(3,4,5)P3	pubmed:29623928,pubmed:20817957,pubmed:18931680,pubmed:28443090	0000-0003-4423-4370
+text	curie	references	contributor_orcid
+PI(3,4,5)P3	hgnc:22979	pubmed:29623928,pubmed:20817957,pubmed:18931680,pubmed:28443090	0000-0003-4423-4370

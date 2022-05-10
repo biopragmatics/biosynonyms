@@ -43,7 +43,7 @@ class TestIntegrity(unittest.TestCase):
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
                 self.assertEquals(5, len(row))
-                curie, text, stype, references, orcid = row
+                text, curie, stype, references, orcid = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
                 self.assertIn(stype, SYNONYM_TYPES)
@@ -68,7 +68,7 @@ class TestIntegrity(unittest.TestCase):
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
                 self.assertEquals(4, len(row))
-                curie, text, references, orcid = row
+                text, curie, references, orcid = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
                 for reference in references.split(","):
