@@ -13,9 +13,9 @@ def _sort(path: Path):
         ]
     rows = sorted(rows)
     with path.open("w") as file:
-        print(*header, sep='\t', file=file)
+        print(*header, sep='\t', file=file)  # noqa:T201
         for row in rows:
-            print(*row, sep='\t', file=file)
+            print(*row, sep='\t', file=file)  # noqa:T201
 
 
 def _main():
