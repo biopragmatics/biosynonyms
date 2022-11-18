@@ -3,13 +3,13 @@ import json
 import logging
 from itertools import permutations
 from pathlib import Path
-from typing import cast
-
-import click
-import networkx as nx
-from tqdm import tqdm
 
 import bioregistry
+import click
+import matplotlib.pyplot as plt
+from embiggen import GraphVisualizer
+from embiggen.embedders import SecondOrderLINEEnsmallen
+from ensmallen import Graph
 from gilda.process import normalize
 from indra.assemblers.indranet.assembler import NS_PRIORITY_LIST
 from indra.statements import (
@@ -20,14 +20,15 @@ from indra.statements import (
     Influence,
     Statement,
 )
-from more_node2vec import Model, fit_model, process_graph, echo
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
-INPUT_PATH = Path("/Users/cthoyt/Downloads/processed_statements-2022-03-31.tsv.gz")
-OUTPUT_PATH = Path("/Users/cthoyt/Downloads/processed_statements-2022-03-31-pairs.tsv")
-MODEL_DIR = Path("/Users/cthoyt/Downloads/processed_statements-2022-03-31-model/")
-MODEL_DIR.mkdir(exist_ok=True, parents=True)
+FOLDER = Path("/Users/cthoyt/.data/indra/db")
+INPUT_PATH = FOLDER.joinpath("processed_statements-2022-03-31.tsv.gz")
+PAIRS_PATH = FOLDER.joinpath("processed_statements-2022-03-31-pairs.tsv")
+EMBEDDINGS_PATH = FOLDER.joinpath("processed_statements-2022-03-31-embeddings.tsv.gz")
+PLOT_PATH = FOLDER.joinpath("plot.png")
 
 
 def get_agent_curie_tuple(agent: Agent) -> tuple[str, str]:
@@ -40,49 +41,53 @@ def get_agent_curie_tuple(agent: Agent) -> tuple[str, str]:
 
 @click.command()
 def main():
-    if Model.is_loadable(MODEL_DIR):
-        model = Model.load(MODEL_DIR)
-    else:
-        pairs = get_pairs()
-        echo("building graph")
-        graph = nx.Graph(pairs)
-        # Get biggest connected component
-        # graph = process_graph(graph)
-        model = fit_model(graph)
-        model.save(MODEL_DIR)
+    if not EMBEDDINGS_PATH.is_file():
+        graph = get_graph()
+        embedding = SecondOrderLINEEnsmallen(embedding_size=32).fit_transform(graph)
+        df = embedding.get_all_node_embedding()[0].sort_index()
+        df.index.name = "node"
+        df.to_csv(EMBEDDINGS_PATH, sep="\t")
 
-    fig, axes = model.plot_pca()
-    fig.savefig(MODEL_DIR.joinpath("pca.pdf"))
+        visualizer = GraphVisualizer(graph)
+        fig, *_ = visualizer.fit_and_plot_all(embedding)
+        plt.savefig(PLOT_PATH, dpi=300)
+        plt.close(fig)
 
 
-def get_pairs(force: bool = False) -> list[tuple[str, str]]:
-    if OUTPUT_PATH.exists() and not force:
-        with OUTPUT_PATH.open() as file:
-            return cast(list[tuple[str, str]], [
-                line.strip().split("\t", 1)  # this will always be exactly two
-                for line in tqdm(file, desc="reading pairs", unit_scale=True)
-            ])
+def get_graph(force: bool = False) -> Graph:
+    if not PAIRS_PATH.exists() or force:
+        rows: set[tuple[str, str]] = set()
+        with gzip.open(INPUT_PATH, "rt") as file:
+            it = tqdm(
+                file, desc="loading INDRA db", unit="statement", unit_scale=True, total=65_102_088
+            )
+            for line in it:
+                _assembled_hash, stmt_json_str = line.split("\t", 1)
+                # why won't it strip the extra?!?!
+                stmt_json_str = stmt_json_str.replace('""', '"').strip('"')[:-2]
+                stmt = Statement._from_json(json.loads(stmt_json_str))
+                rows.update(_rows_from_stmt(stmt))
 
-    rows: set[tuple[str, str]] = set()
-    with gzip.open(INPUT_PATH, "rt") as file:
-        it = tqdm(file, desc="loading INDRA db", unit="statement", unit_scale=True, total=65_102_088)
-        for line in it:
-            _assembled_hash, stmt_json_str = line.split("\t", 1)
-            # why won't it strip the extra?!?!
-            stmt_json_str = stmt_json_str.replace('""', '"').strip('"')[:-2]
-            stmt = Statement._from_json(json.loads(stmt_json_str))
-            rows.update(_rows_from_stmt(stmt))
+        sorted_rows = sorted(rows)
+        with PAIRS_PATH.open("w") as file:
+            for pair in tqdm(sorted_rows, desc="writing", unit_scale=True):
+                print(*pair, sep="\t", file=file)
 
-    sorted_rows = sorted(rows)
-    with OUTPUT_PATH.open("w") as file:
-        for pair in tqdm(sorted_rows, desc="writing", unit_scale=True):
-            print(*pair, sep="\t", file=file)
-    return sorted_rows
+    return Graph.from_csv(
+        edge_path=str(PAIRS_PATH),
+        edge_list_separator="\t",
+        sources_column_number=0,
+        destinations_column_number=1,
+        edge_list_numeric_node_ids=False,
+        directed=True,
+        name="INDRA Database",
+        verbose=True,
+    )
 
 
 def _rows_from_stmt(
     stmt: Statement,
-    complex_members=3,
+    complex_members: int = 3,
 ) -> list[tuple[str, str]]:
     rv = []
     not_none_agents = stmt.real_agent_list()
