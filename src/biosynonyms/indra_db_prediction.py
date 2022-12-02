@@ -1,16 +1,20 @@
 import gzip
+import itertools as itt
 import json
 import logging
+from collections import Counter
 from itertools import permutations
 from pathlib import Path
+from typing import Iterable
 
 import bioregistry
 import click
+import gilda
 import matplotlib.pyplot as plt
+import pandas as pd
 from embiggen import GraphVisualizer
 from embiggen.embedders import SecondOrderLINEEnsmallen
 from ensmallen import Graph
-from gilda.process import normalize
 from indra.assemblers.indranet.assembler import NS_PRIORITY_LIST
 from indra.statements import (
     Agent,
@@ -20,15 +24,20 @@ from indra.statements import (
     Influence,
     Statement,
 )
+from more_click import force_option
 from tqdm import tqdm
+
+from biosynonyms.resources import load_unentities
 
 logger = logging.getLogger(__name__)
 
 FOLDER = Path("/Users/cthoyt/.data/indra/db")
 INPUT_PATH = FOLDER.joinpath("processed_statements-2022-03-31.tsv.gz")
-PAIRS_PATH = FOLDER.joinpath("processed_statements-2022-03-31-pairs.tsv")
-EMBEDDINGS_PATH = FOLDER.joinpath("processed_statements-2022-03-31-embeddings.tsv.gz")
+PAIRS_PATH = FOLDER.joinpath("biosynonyms_pairs.tsv")
+COUNTER_PATH = FOLDER.joinpath("biosynonyms_counter.tsv")
+EMBEDDINGS_PATH = FOLDER.joinpath("biosynonyms_embeddings.parquet")
 PLOT_PATH = FOLDER.joinpath("plot.png")
+TEXT_PREFIX = "text"
 
 
 def get_agent_curie_tuple(agent: Agent) -> tuple[str, str]:
@@ -36,17 +45,30 @@ def get_agent_curie_tuple(agent: Agent) -> tuple[str, str]:
     for prefix in NS_PRIORITY_LIST:
         if prefix in agent.db_refs:
             return bioregistry.normalize_parsed_curie(prefix, agent.db_refs[prefix])
-    return "text", normalize(agent.name)
+
+    scored_matches = gilda.ground(agent.name)
+    if not scored_matches:
+        return TEXT_PREFIX, agent.name.strip().replace("\t", " ")
+
+    scored_match = scored_matches[0]
+    return bioregistry.normalize_parsed_curie(scored_match.term.db, scored_match.term.id)
 
 
 @click.command()
-def main():
-    if not EMBEDDINGS_PATH.is_file():
-        graph = get_graph()
-        embedding = SecondOrderLINEEnsmallen(embedding_size=32).fit_transform(graph)
-        df = embedding.get_all_node_embedding()[0].sort_index()
+@click.option("--size", type=int, default=32)
+@force_option
+@click.option("--test", is_flag=True)
+def main(size: int, force: bool, test: bool):
+    if not EMBEDDINGS_PATH.is_file() or force:
+        graph = get_graph(force=force, test=test)
+        embedding = SecondOrderLINEEnsmallen(embedding_size=size).fit_transform(graph)
+        df: pd.DataFrame = embedding.get_all_node_embedding()[0].sort_index()
         df.index.name = "node"
-        df.to_csv(EMBEDDINGS_PATH, sep="\t")
+        df.columns = [str(c) for c in df.columns]
+        df.to_parquet(EMBEDDINGS_PATH)
+        # TODO use more efficient storage format, this is like 3.5GB as gzipped text
+        # TODO output index of all synonyms
+        # TODO calculate closest neighbors for synonyms (that aren't already in predictions)
 
         visualizer = GraphVisualizer(graph)
         fig, *_ = visualizer.fit_and_plot_all(embedding)
@@ -54,24 +76,40 @@ def main():
         plt.close(fig)
 
 
-def get_graph(force: bool = False) -> Graph:
+def get_graph(force: bool = False, test: bool = False) -> Graph:
     if not PAIRS_PATH.exists() or force:
-        rows: set[tuple[str, str]] = set()
+        unentities = load_unentities()
+        rows: set[tuple[str, str, str, str]] = set()
         with gzip.open(INPUT_PATH, "rt") as file:
             it = tqdm(
                 file, desc="loading INDRA db", unit="statement", unit_scale=True, total=65_102_088
             )
+            if test:
+                it = itt.islice(it, 300_000)
             for line in it:
                 _assembled_hash, stmt_json_str = line.split("\t", 1)
                 # why won't it strip the extra?!?!
                 stmt_json_str = stmt_json_str.replace('""', '"').strip('"')[:-2]
                 stmt = Statement._from_json(json.loads(stmt_json_str))
-                rows.update(_rows_from_stmt(stmt))
+                rows.update(_rows_from_stmt(stmt, unentities))
 
         sorted_rows = sorted(rows)
+
+        counter = Counter(_iter(sorted_rows))
+        counter_df = pd.DataFrame(counter.most_common(), columns=["synonym", "count"])
+        counter_df.to_csv(COUNTER_PATH, sep="\t", index=False)
+
+        # this can't be gzipped or else GRAPE doesn't work
         with PAIRS_PATH.open("w") as file:
-            for pair in tqdm(sorted_rows, desc="writing", unit_scale=True):
-                print(*pair, sep="\t", file=file)
+            for source_prefix, source_id, target_prefix, target_id in tqdm(
+                sorted_rows, desc="writing", unit_scale=True
+            ):
+                print(
+                    f"{source_prefix}:{source_id}",
+                    f"{target_prefix}:{target_id}",
+                    sep="\t",
+                    file=file,
+                )
 
     return Graph.from_csv(
         edge_path=str(PAIRS_PATH),
@@ -85,10 +123,20 @@ def get_graph(force: bool = False) -> Graph:
     )
 
 
+def _iter(sorted_rows: Iterable[tuple[str, str, str, str]]):
+    it = tqdm(sorted_rows, unit_scale=True, desc="counting occurrences")
+    for source_prefix, source_id, target_prefix, target_id in it:
+        if source_prefix == TEXT_PREFIX:
+            yield source_id
+        if target_prefix == TEXT_PREFIX:
+            yield target_id
+
+
 def _rows_from_stmt(
     stmt: Statement,
+    unentities: set[str],
     complex_members: int = 3,
-) -> list[tuple[str, str]]:
+) -> list[tuple[str, str, str, str]]:
     rv = []
     not_none_agents = stmt.real_agent_list()
     if len(not_none_agents) < 2:
@@ -138,11 +186,15 @@ def _rows_from_stmt(
             continue
         source_prefix, source_id = get_agent_curie_tuple(agent_a)
         target_prefix, target_id = get_agent_curie_tuple(agent_b)
+        if source_id in unentities or target_id in unentities:
+            continue
         # stmt_type = type(stmt).__name__
         row = (
-            f"{source_prefix}:{source_id}",
+            source_prefix,
+            source_id,
             # stmt_type,
-            f"{target_prefix}:{target_id}",
+            target_prefix,
+            target_id,
         )
         rv.append(row)
     return rv
