@@ -66,10 +66,9 @@ def get_agent_curie_tuple(agent: Agent) -> tuple[str, str]:
 @click.command()
 @click.option("--size", type=int, default=32)
 @force_option
-@click.option("--test", is_flag=True)
-def main(size: int, force: bool, test: bool):
+def main(size: int, force: bool):
     if not EMBEDDINGS_PATH.is_file() or force:
-        graph = get_graph(force=force, test=test)
+        graph = get_graph(force=force)
         embedding = SecondOrderLINEEnsmallen(embedding_size=size).fit_transform(graph)
         df: pd.DataFrame = embedding.get_all_node_embedding()[0].sort_index()
         df.index.name = "node"
