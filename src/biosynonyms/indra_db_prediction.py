@@ -1,8 +1,11 @@
+"""Predict synonyms based on similarity."""
+
 import gzip
 import itertools as itt
 import json
 import logging
 from collections import Counter
+from functools import partial
 from itertools import permutations
 from pathlib import Path
 from typing import Iterable
@@ -26,6 +29,7 @@ from indra.statements import (
 )
 from more_click import force_option
 from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 
 from biosynonyms.resources import load_unentities
 
@@ -39,6 +43,9 @@ EMBEDDINGS_PATH = FOLDER.joinpath("biosynonyms_embeddings.parquet")
 PLOT_PATH = FOLDER.joinpath("plot.png")
 TEXT_PREFIX = "text"
 
+Row = tuple[str, str, str, str]
+Rows = list[Row]
+
 
 def get_agent_curie_tuple(agent: Agent) -> tuple[str, str]:
     """Return a tuple of name space, id from an Agent's db_refs."""
@@ -48,7 +55,9 @@ def get_agent_curie_tuple(agent: Agent) -> tuple[str, str]:
 
     scored_matches = gilda.ground(agent.name)
     if not scored_matches:
-        return TEXT_PREFIX, agent.name.strip().replace("\t", " ")
+        return TEXT_PREFIX, agent.name.strip().replace("\t", " ").replace("\n", " ").replace(
+            "  ", " "
+        )
 
     scored_match = scored_matches[0]
     return bioregistry.normalize_parsed_curie(scored_match.term.db, scored_match.term.id)
@@ -76,22 +85,22 @@ def main(size: int, force: bool, test: bool):
         plt.close(fig)
 
 
-def get_graph(force: bool = False, test: bool = False) -> Graph:
+def get_graph(force: bool = False) -> Graph:
     if not PAIRS_PATH.exists() or force:
         unentities = load_unentities()
-        rows: set[tuple[str, str, str, str]] = set()
+        func = partial(_line_to_rows, unentities=unentities)
+
         with gzip.open(INPUT_PATH, "rt") as file:
-            it = tqdm(
-                file, desc="loading INDRA db", unit="statement", unit_scale=True, total=65_102_088
+            groups = process_map(
+                func,
+                file,
+                desc="loading INDRA db",
+                unit="statement",
+                unit_scale=True,
+                total=65_102_088,
+                chunksize=300_000,
             )
-            if test:
-                it = itt.islice(it, 300_000)
-            for line in it:
-                _assembled_hash, stmt_json_str = line.split("\t", 1)
-                # why won't it strip the extra?!?!
-                stmt_json_str = stmt_json_str.replace('""', '"').strip('"')[:-2]
-                stmt = Statement._from_json(json.loads(stmt_json_str))
-                rows.update(_rows_from_stmt(stmt, unentities))
+            rows: set[tuple[str, str, str, str]] = set(itt.chain.from_iterable(groups))
 
         sorted_rows = sorted(rows)
 
@@ -132,16 +141,23 @@ def _iter(sorted_rows: Iterable[tuple[str, str, str, str]]):
             yield target_id
 
 
+def _line_to_rows(line: str, unentities: set[str]) -> Rows:
+    _assembled_hash, stmt_json_str = line.split("\t", 1)
+    # why won't it strip the extra?!?!
+    stmt_json_str = stmt_json_str.replace('""', '"').strip('"')[:-2]
+    stmt = Statement._from_json(json.loads(stmt_json_str))
+    return _rows_from_stmt(stmt, unentities)
+
+
 def _rows_from_stmt(
     stmt: Statement,
     unentities: set[str],
     complex_members: int = 3,
-) -> list[tuple[str, str, str, str]]:
-    rv = []
+) -> Rows:
     not_none_agents = stmt.real_agent_list()
     if len(not_none_agents) < 2:
         # Exclude statements with less than 2 agents
-        return rv
+        return []
 
     if isinstance(stmt, (Influence, Association)):
         # Special handling for Influences and Associations
@@ -163,7 +179,7 @@ def _rows_from_stmt(
         # Do not add complexes with more members than complex_members
         if len(not_none_agents) > complex_members:
             logger.debug(f"Skipping a complex with {len(not_none_agents)} members.")
-            return rv
+            return []
         else:
             # add every permutation with a neutral polarity
             edges = [(a, b, None) for a, b in permutations(not_none_agents, 2)]
@@ -178,9 +194,11 @@ def _rows_from_stmt(
         # This is for any remaining statement type that may not be
         # handled above explicitly but somehow has more than two
         # not-none-agents at this point
-        return rv
+        return []
     else:
         edges = [(not_none_agents[0], not_none_agents[1], None)]
+
+    rows = []
     for agent_a, agent_b, sign in edges:
         if agent_a.name == agent_b.name:
             continue
@@ -196,8 +214,8 @@ def _rows_from_stmt(
             target_prefix,
             target_id,
         )
-        rv.append(row)
-    return rv
+        rows.append(row)
+    return rows
 
 
 if __name__ == "__main__":
