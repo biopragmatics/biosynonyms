@@ -42,11 +42,3 @@ def write_unentities(rows: Iterable[tuple[str, str]]) -> None:
         print("text", "curator_orcid", sep="\t", file=file)
         for row in sorted(rows, key=_unentities_key):
             print(*row, sep="\t", file=file)
-
-
-def lint():
-    write_unentities(list(_load_unentities()))
-
-
-if __name__ == "__main__":
-    lint()

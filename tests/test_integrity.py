@@ -35,9 +35,7 @@ class TestIntegrity(unittest.TestCase):
 
         norm_prefix = bioregistry.normalize_prefix(prefix)
         self.assertIsNotNone(norm_prefix)
-
-        preferred_prefix = bioregistry.get_preferred_prefix(prefix) or norm_prefix
-        self.assertEqual(preferred_prefix, prefix)
+        self.assertEqual(norm_prefix, prefix)
 
         pattern = bioregistry.get_pattern(prefix)
         if pattern:
@@ -95,6 +93,7 @@ class TestIntegrity(unittest.TestCase):
         self.assertEqual(0, len(duplicated), msg=f"duplicated entries: {duplicated}")
 
     def test_non_entities(self):
+        """Test each row of the non-entities file."""
         with UNENTITIES_PATH.open() as file:
             _header, *rows = (line.strip().split("\t") for line in file)
         self.assertEqual(sorted(rows, key=_unentities_key), rows)
