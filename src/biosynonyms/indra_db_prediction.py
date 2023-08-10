@@ -16,7 +16,7 @@ import gilda
 import matplotlib.pyplot as plt
 import pandas as pd
 from embiggen import GraphVisualizer
-from embiggen.embedders import SecondOrderLINEEnsmallen
+from embiggen.embedders.ensmallen_embedders.second_order_line import SecondOrderLINEEnsmallen
 from ensmallen import Graph
 from indra.assemblers.indranet.assembler import NS_PRIORITY_LIST
 from indra.statements import (
@@ -46,6 +46,9 @@ TEXT_PREFIX = "text"
 Row = tuple[str, str, str, str]
 Rows = list[Row]
 
+def norm(s: str) -> str:
+    return s.strip().replace("\t", " ").replace("\n", " ").replace("  ", " ")
+
 
 def get_agent_curie_tuple(agent: Agent) -> tuple[str, str]:
     """Return a tuple of name space, id from an Agent's db_refs."""
@@ -53,11 +56,10 @@ def get_agent_curie_tuple(agent: Agent) -> tuple[str, str]:
         if prefix in agent.db_refs:
             return bioregistry.normalize_parsed_curie(prefix, agent.db_refs[prefix])
 
-    scored_matches = gilda.ground(agent.name)
+    norm_agent_name = norm(agent.name)
+    scored_matches = gilda.ground(norm_agent_name)
     if not scored_matches:
-        return TEXT_PREFIX, agent.name.strip().replace("\t", " ").replace("\n", " ").replace(
-            "  ", " "
-        )
+        return TEXT_PREFIX, norm_agent_name
 
     scored_match = scored_matches[0]
     return bioregistry.normalize_parsed_curie(scored_match.term.db, scored_match.term.id)
@@ -74,7 +76,6 @@ def main(size: int, force: bool):
         df.index.name = "node"
         df.columns = [str(c) for c in df.columns]
         df.to_parquet(EMBEDDINGS_PATH)
-        # TODO use more efficient storage format, this is like 3.5GB as gzipped text
         # TODO output index of all synonyms
         # TODO calculate closest neighbors for synonyms (that aren't already in predictions)
 
