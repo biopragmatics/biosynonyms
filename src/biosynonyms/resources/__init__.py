@@ -1,7 +1,7 @@
 """Resources for biosynonyms."""
 
 from pathlib import Path
-from typing import Iterable, cast
+from typing import Iterable, cast, Sequence
 
 __all__ = [
     "POSITIVES_PATH",
@@ -17,7 +17,7 @@ NEGATIVES_PATH = HERE.joinpath("negatives.tsv")
 UNENTITIES_PATH = HERE.joinpath("unentities.tsv")
 
 
-def sort_key(row):
+def sort_key(row: Sequence[str]) -> tuple[str, str, str, str]:
     """Return a key for sorting a row."""
     return row[0].casefold(), row[0], row[1].casefold(), row[1]
 
@@ -34,7 +34,7 @@ def _load_unentities() -> Iterable[tuple[str, str]]:
             yield cast(tuple[str, str], line.strip().split("\t"))
 
 
-def _unentities_key(row):
+def _unentities_key(row: Sequence[str]) -> str:
     return row[0].casefold()
 
 
