@@ -1,5 +1,12 @@
 """Predict synonyms based on similarity.
 
+Does the following:
+
+- [ ] Automate acquisition of INDRA DB processed statements
+- [x] Convert processed (including ungrounded statements) into triples
+- [ ] Calculate graph embedding
+- [ ] Calculate nearest neighbors for top K entities with text to all entities with grounding
+
 Run with ``python -m biosynonyms.predict``
 """
 
