@@ -1,7 +1,7 @@
 """Resources for biosynonyms."""
 
 from pathlib import Path
-from typing import Iterable, cast, Sequence
+from typing import Iterable, Sequence, cast
 
 __all__ = [
     "POSITIVES_PATH",
