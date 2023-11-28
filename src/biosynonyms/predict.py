@@ -172,7 +172,7 @@ def get_graph(force: bool = False) -> "ensmallen.Graph":
         # this can't be gzipped or else GRAPE doesn't work
         with PAIRS_PATH.open("w") as file:
             for source, target in tqdm(sorted_rows, desc="writing", unit_scale=True):
-                print(
+                print(  # noqa:T201
                     source.curie,
                     target.curie,
                     sep="\t",
@@ -266,7 +266,7 @@ def _rows_from_stmt(
         return r.prefix == TEXT_PREFIX and r.identifier in unentities
 
     rows = []
-    for agent_a, agent_b, sign in edges:
+    for agent_a, agent_b, _sign in edges:
         if agent_a.name == agent_b.name:
             continue
         source = get_agent_curie_tuple(agent_a, grounder=grounder)

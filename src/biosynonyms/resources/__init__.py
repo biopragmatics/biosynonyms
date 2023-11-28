@@ -23,12 +23,13 @@ def sort_key(row):
 
 
 def load_unentities() -> set[str]:
+    """Load all strings that are known not to be named entities."""
     return {line[0] for line in _load_unentities()}
 
 
 def _load_unentities() -> Iterable[tuple[str, str]]:
     with UNENTITIES_PATH.open() as file:
-        _header = next(file)
+        next(file)  # throw away header
         for line in file:
             yield cast(tuple[str, str], line.strip().split("\t"))
 
@@ -38,7 +39,8 @@ def _unentities_key(row):
 
 
 def write_unentities(rows: Iterable[tuple[str, str]]) -> None:
+    """Write all strings that are known not to be named entities."""
     with UNENTITIES_PATH.open("w") as file:
-        print("text", "curator_orcid", sep="\t", file=file)
+        print("text", "curator_orcid", sep="\t", file=file)  # noqa:T201
         for row in sorted(rows, key=_unentities_key):
-            print(*row, sep="\t", file=file)
+            print(*row, sep="\t", file=file)  # noqa:T201
