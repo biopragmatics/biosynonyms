@@ -11,7 +11,7 @@ from .resources import (
 )
 
 
-def _sort(path: Path):
+def _sort(path: Path) -> None:
     with path.open() as file:
         header, *rows = [line.strip().split("\t") for line in file]
     rows = sorted(rows, key=sort_key)
@@ -21,7 +21,7 @@ def _sort(path: Path):
             print(*row, sep="\t", file=file)  # noqa:T201
 
 
-def _main():
+def _main() -> None:
     _sort(POSITIVES_PATH)
     _sort(NEGATIVES_PATH)
     write_unentities(list(_load_unentities()))
