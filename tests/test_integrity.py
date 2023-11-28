@@ -5,7 +5,13 @@ from collections import Counter
 
 import bioregistry
 
-from biosynonyms.resources import NEGATIVES_PATH, POSITIVES_PATH, sort_key
+from biosynonyms.resources import (
+    NEGATIVES_PATH,
+    POSITIVES_PATH,
+    UNENTITIES_PATH,
+    _unentities_key,
+    sort_key,
+)
 
 SYNONYM_TYPES = {
     "oio:hasExactSynonym",
@@ -29,9 +35,7 @@ class TestIntegrity(unittest.TestCase):
 
         norm_prefix = bioregistry.normalize_prefix(prefix)
         self.assertIsNotNone(norm_prefix)
-
-        preferred_prefix = bioregistry.get_preferred_prefix(prefix) or norm_prefix
-        self.assertEqual(preferred_prefix, prefix)
+        self.assertEqual(norm_prefix, prefix)
 
         pattern = bioregistry.get_pattern(prefix)
         if pattern:
@@ -87,3 +91,15 @@ class TestIntegrity(unittest.TestCase):
         c = Counter(row[:2] for row in rows)
         duplicated = {key: count for key, count in c.items() if count > 1}
         self.assertEqual(0, len(duplicated), msg=f"duplicated entries: {duplicated}")
+
+    def test_non_entities(self):
+        """Test each row of the non-entities file."""
+        with UNENTITIES_PATH.open() as file:
+            _header, *rows = (line.strip().split("\t") for line in file)
+        self.assertEqual(sorted(rows, key=_unentities_key), rows)
+        for line_number, line in enumerate(rows, start=1):
+            with self.subTest(line_number=line_number):
+                self.assertEqual(2, len(line))
+                text, orcid = line
+                self.assertEqual(text.strip(), text)
+                self.assertTrue(bioregistry.is_valid_identifier("orcid", orcid))
