@@ -14,11 +14,11 @@ from biosynonyms.resources import (
 )
 
 SYNONYM_TYPES = {
-    "oio:hasExactSynonym",
-    "oio:hasNarrowSynonym",
-    "oio:hasBroadSynonym",
-    "oio:hasRelatedSynonym",
-    "oio:hasSynonym",
+    "oboInOwl:hasExactSynonym",
+    "oboInOwl:hasNarrowSynonym",
+    "oboInOwl:hasBroadSynonym",
+    "oboInOwl:hasRelatedSynonym",
+    "oboInOwl:hasSynonym",
 }
 
 
@@ -48,11 +48,13 @@ class TestIntegrity(unittest.TestCase):
 
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
-                self.assertEquals(5, len(row))
-                text, curie, stype, references, orcid = row
+                self.assertEqual(6, len(row))
+                text, curie, scope, synonym_type, references, orcid = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
-                self.assertIn(stype, SYNONYM_TYPES)
+                self.assertIn(scope, SYNONYM_TYPES)
+                if synonym_type:
+                    self.assertTrue(synonym_type.startswith("OMO:"))
                 for reference in references.split(",") if references else []:
                     reference = reference.strip()
                     self.assert_curie(reference)
