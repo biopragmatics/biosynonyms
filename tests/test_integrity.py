@@ -4,7 +4,9 @@ import unittest
 from collections import Counter
 
 import bioregistry
+import gilda
 
+import biosynonyms
 from biosynonyms.resources import (
     NEGATIVES_PATH,
     POSITIVES_PATH,
@@ -105,3 +107,11 @@ class TestIntegrity(unittest.TestCase):
                 text, orcid = line
                 self.assertEqual(text.strip(), text)
                 self.assertTrue(bioregistry.is_valid_identifier("orcid", orcid))
+
+    def test_gilda(self):
+        """Test getting tilda terms."""
+        grounder = gilda.Grounder(list(biosynonyms.get_gilda_terms()))
+        scored_matches = grounder.ground("YAL021C")
+        self.assertEqual(1, len(scored_matches))
+        self.assertEqual("sgd", scored_matches[0].term.db)
+        self.assertEqual("S000000019", scored_matches[0].term.id)

@@ -1,12 +1,12 @@
 """Resources for Biosynonyms."""
 
+import csv
 from pathlib import Path
-from typing import Iterable, Sequence, cast, TYPE_CHECKING
-from pydantic import BaseModel, Field
+from typing import TYPE_CHECKING, Iterable, Sequence, cast
+
 import pandas as pd
 from curies import Reference
-
-import csv
+from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     import gilda
@@ -71,6 +71,7 @@ class Synonym(BaseModel):
 
     def as_gilda_term(self) -> "gilda.Term":
         """Get this synonym as a gilda term."""
+        import gilda
         from gilda.process import normalize
 
         return gilda.Term(
@@ -85,9 +86,9 @@ class Synonym(BaseModel):
 
 
 def _safe_parse_curie(x) -> Reference | None:
-    if pd.isna(x):
+    if pd.isna(x) or not x.strip():
         return None
-    return Reference.from_curie(x)
+    return Reference.from_curie(x.strip())
 
 
 def get_synonyms(path: str | Path) -> list[Synonym]:
@@ -95,17 +96,22 @@ def get_synonyms(path: str | Path) -> list[Synonym]:
     path = Path(path).resolve()
     with path.open() as file:
         reader = csv.reader(file, delimiter="\t")
+        _header = next(reader)
         return [
             Synonym(
                 text=text,
                 reference=Reference.from_curie(curie),
-                name="",  # FIXME - include this in datamodel
-                scope=Reference.from_curie(scope),
-                type=_safe_parse_curie(stype),
-                provenance=[Reference.from_curie(x) for x in provenance.split(",")],
+                name=name,
+                scope=Reference.from_curie(scope_curie),
+                type=_safe_parse_curie(synonym_type_curie),
+                provenance=[
+                    Reference.from_curie(provenance_curie)
+                    for provenance_curie in provenance_curies.split(",")
+                    if provenance_curie.strip()
+                ],
                 contributor=Reference(prefix="orcid", identifier=contributor),
             )
-            for text, curie, scope, stype, provenance, contributor in reader
+            for text, curie, name, scope_curie, synonym_type_curie, provenance_curies, contributor in reader
         ]
 
 
