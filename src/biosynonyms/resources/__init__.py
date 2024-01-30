@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 __all__ = [
     "load_unentities",
     "get_gilda_terms",
-    "get_synonyms",
+    "parse_synonyms",
     "write_unentities",
     "Synonym",
 ]
@@ -23,6 +23,15 @@ HERE = Path(__file__).parent.resolve()
 POSITIVES_PATH = HERE.joinpath("positives.tsv")
 NEGATIVES_PATH = HERE.joinpath("negatives.tsv")
 UNENTITIES_PATH = HERE.joinpath("unentities.tsv")
+
+
+SYNONYM_SCOPES = {
+    "oboInOwl:hasExactSynonym",
+    "oboInOwl:hasNarrowSynonym",
+    "oboInOwl:hasBroadSynonym",
+    "oboInOwl:hasRelatedSynonym",
+    "oboInOwl:hasSynonym",
+}
 
 
 def sort_key(row: Sequence[str]) -> tuple[str, str, str, str]:
@@ -60,7 +69,7 @@ class Synonym(BaseModel):
     text: str
     reference: Reference
     name: str
-    scope: Reference
+    scope: Reference = Field(default=Reference.from_curie("oboInOwl:hasSynonym"))
     type: Reference | None = Field(
         default=None,
         title="Synonym type",
@@ -69,8 +78,32 @@ class Synonym(BaseModel):
     provenance: list[Reference] = Field(default_factory=list)
     contributor: Reference
 
+    @classmethod
+    def from_row(cls, row) -> "Synonym":
+        """Parse a dictionary representing a row in a TSV"""
+        return cls(
+            text=row["text"],
+            reference=Reference.from_curie(row["curie"]),
+            name=row["name"],
+            scope=(
+                Reference.from_curie(row["scope"])
+                if "scope" in row
+                else Reference.from_curie("oboInOwl:hasSynonym")
+            ),
+            type=_safe_parse_curie(row["type"]) if "type" in row else None,
+            provenance=[
+                Reference.from_curie(provenance_curie)
+                for provenance_curie in (row.get("provenance") or "").split(",")
+                if provenance_curie.strip()
+            ],
+            contributor=Reference(prefix="orcid", identifier=row["contributor"]),
+        )
+
     def as_gilda_term(self) -> "gilda.Term":
         """Get this synonym as a gilda term."""
+        if not self.name:
+            raise ValueError("can't make a Gilda term without a label")
+
         import gilda
         from gilda.process import normalize
 
@@ -91,31 +124,24 @@ def _safe_parse_curie(x) -> Reference | None:
     return Reference.from_curie(x.strip())
 
 
-def get_synonyms(path: str | Path) -> list[Synonym]:
+def get_positive_synonyms() -> list[Synonym]:
+    """Get positive synonyms curated in Biosynonyms."""
+    return parse_synonyms(POSITIVES_PATH)
+
+
+def get_negative_synonyms() -> list[Synonym]:
+    """Get negative synonyms curated in Biosynonyms."""
+    return parse_synonyms(NEGATIVES_PATH)
+
+
+def parse_synonyms(path: str | Path) -> list[Synonym]:
     """Load synonyms from a file."""
     path = Path(path).resolve()
     with path.open() as file:
-        reader = csv.reader(file, delimiter="\t")
-        _header = next(reader)
-        return [
-            Synonym(
-                text=text,
-                reference=Reference.from_curie(curie),
-                name=name,
-                scope=Reference.from_curie(scope_curie),
-                type=_safe_parse_curie(synonym_type_curie),
-                provenance=[
-                    Reference.from_curie(provenance_curie)
-                    for provenance_curie in provenance_curies.split(",")
-                    if provenance_curie.strip()
-                ],
-                contributor=Reference(prefix="orcid", identifier=contributor),
-            )
-            for text, curie, name, scope_curie, synonym_type_curie, provenance_curies, contributor in reader
-        ]
+        return [Synonym.from_row(d) for d in csv.DictReader(file, delimiter="\t")]
 
 
 def get_gilda_terms() -> Iterable["gilda.Term"]:
     """Get Gilda terms for all positive synonyms."""
-    for synonym in get_synonyms(POSITIVES_PATH):
+    for synonym in parse_synonyms(POSITIVES_PATH):
         yield synonym.as_gilda_term()

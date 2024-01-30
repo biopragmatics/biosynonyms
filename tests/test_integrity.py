@@ -5,23 +5,17 @@ from collections import Counter
 
 import bioregistry
 import gilda
+from curies import ReferenceTuple
 
 import biosynonyms
 from biosynonyms.resources import (
     NEGATIVES_PATH,
     POSITIVES_PATH,
+    SYNONYM_SCOPES,
     UNENTITIES_PATH,
     _unentities_key,
     sort_key,
 )
-
-SYNONYM_TYPES = {
-    "oboInOwl:hasExactSynonym",
-    "oboInOwl:hasNarrowSynonym",
-    "oboInOwl:hasBroadSynonym",
-    "oboInOwl:hasRelatedSynonym",
-    "oboInOwl:hasSynonym",
-}
 
 
 class TestIntegrity(unittest.TestCase):
@@ -33,7 +27,7 @@ class TestIntegrity(unittest.TestCase):
         :param curie: A compact uniform resource identifier
             of the form ``<prefix>:<identifier>``.
         """
-        prefix, identifier = curie.split(":", 1)
+        prefix, identifier = ReferenceTuple.from_curie(curie)
 
         norm_prefix = bioregistry.normalize_prefix(prefix)
         self.assertIsNotNone(norm_prefix)
@@ -50,11 +44,11 @@ class TestIntegrity(unittest.TestCase):
 
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
-                self.assertEqual(6, len(row))
-                text, curie, scope, synonym_type, references, orcid = row
+                self.assertEqual(7, len(row))
+                text, curie, _name, scope, synonym_type, references, orcid = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
-                self.assertIn(scope, SYNONYM_TYPES)
+                self.assertIn(scope, SYNONYM_SCOPES)
                 if synonym_type:
                     self.assertTrue(synonym_type.startswith("OMO:"))
                 for reference in references.split(",") if references else []:
@@ -77,8 +71,8 @@ class TestIntegrity(unittest.TestCase):
 
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
-                self.assertEquals(4, len(row))
-                text, curie, references, orcid = row
+                self.assertEquals(5, len(row))
+                text, curie, _name, references, orcid = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
                 for reference in references.split(","):
@@ -115,3 +109,8 @@ class TestIntegrity(unittest.TestCase):
         self.assertEqual(1, len(scored_matches))
         self.assertEqual("sgd", scored_matches[0].term.db)
         self.assertEqual("S000000019", scored_matches[0].term.id)
+
+    def test_model(self):
+        """Test loading the data model."""
+        biosynonyms.get_positive_synonyms()
+        biosynonyms.get_negative_synonyms()
