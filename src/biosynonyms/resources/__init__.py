@@ -65,7 +65,7 @@ def _load_unentities() -> Iterable[Tuple[str, str]]:
     with UNENTITIES_PATH.open() as file:
         next(file)  # throw away header
         for line in file:
-            yield cast(tuple[str, str], line.strip().split("\t"))
+            yield cast(Tuple[str, str], line.strip().split("\t"))
 
 
 def _unentities_key(row: Sequence[str]) -> str:
