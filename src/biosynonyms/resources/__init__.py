@@ -2,7 +2,7 @@
 
 import csv
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Sequence, cast
+from typing import TYPE_CHECKING, Iterable, Sequence, cast, List, Optional, Union
 
 import pandas as pd
 from curies import Reference
@@ -80,7 +80,7 @@ class Synonym(BaseModel):
         title="Synonym type",
         description="See the OBO Metadata Ontology for valid values",
     )
-    provenance: list[Reference] = Field(default_factory=list)
+    provenance: List[Reference] = Field(default_factory=list)
     contributor: Reference
 
     @classmethod
@@ -123,23 +123,23 @@ class Synonym(BaseModel):
         )
 
 
-def _safe_parse_curie(x) -> Reference | None:
+def _safe_parse_curie(x) -> Optional[Reference]:
     if pd.isna(x) or not x.strip():
         return None
     return Reference.from_curie(x.strip())
 
 
-def get_positive_synonyms() -> list[Synonym]:
+def get_positive_synonyms() -> List[Synonym]:
     """Get positive synonyms curated in Biosynonyms."""
     return parse_synonyms(POSITIVES_PATH)
 
 
-def get_negative_synonyms() -> list[Synonym]:
+def get_negative_synonyms() -> List[Synonym]:
     """Get negative synonyms curated in Biosynonyms."""
     return parse_synonyms(NEGATIVES_PATH)
 
 
-def parse_synonyms(path: str | Path) -> list[Synonym]:
+def parse_synonyms(path: Union[str, Path]) -> List[Synonym]:
     """Load synonyms from a file."""
     path = Path(path).resolve()
     with path.open() as file:
