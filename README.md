@@ -13,26 +13,35 @@ columns:
 1. `text` the synonym text itself
 2. `curie` the compact uniform resource identifier (CURIE) for a biomedical
    entity or concept, standardized using the Bioregistry
-3. `type` the match type, written as a CURIE from
+3. `name` the standard name for the concept
+4. `scope` the match type, written as a CURIE from
    the [OBO in OWL (`oio`)](https://bioregistry.io/oio) controlled vocabulary,
    i.e., one of:
-    - `oio:hasExactSynonym`
-    - `oio:hasNarrowSynonym`
-    - `oio:hasBroadSynonym`
-    - `oio:hasRelatedSynonym`
-    - `oio:hasSynonym`
-4. `references` a comma-delimited list of CURIEs corresponding to publications
+    - `oboInOwl:hasExactSynonym`
+    - `oboInOwl:hasNarrowSynonym`
+    - `oboInOwl:hasBroadSynonym`
+    - `oboInOwl:hasRelatedSynonym`
+    - `oboInOwl:hasSynonym` (use this if the scope is unknown)
+5. `type` the synonym property type, written as a CURIE from
+   the [OBO Metadata Ontology (`omo`)](https://bioregistry.io/omo) controlled vocabulary, 
+   e.g., one of:
+   - `OMO:0003000` (abbreviation)
+   - `OMO:0003001` (ambiguous synonym)
+   - `OMO:0003002` (dubious synonym)
+   - `OMO:0003003` (layperson synonym)
+   - `OMO:0003004` (plural form)
+6. `references` a comma-delimited list of CURIEs corresponding to publications
    that use the given synonym (ideally using highly actionable identifiers from
    semantic spaces like [`pubmed`](https://bioregistry.io/pubmed),
    [`pmc`](https://bioregistry.io/pmc), [`doi`](https://bioregistry.io/doi))
-5. `contributor_orcid` the ORCID identifier of the contributor
+7. `contributor` the ORCID identifier of the contributor
 
 Here's an example of some rows in the synonyms table (with linkified CURIEs):
 
-| text                            | curie                                             | type                                                              | references                                                                                                           | contributor_orcid   |
-|---------------------------------|---------------------------------------------------|-------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|---------------------|
-| PI(3,4,5)P3                     | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | 0000-0003-4423-4370 |
-| phosphatidylinositol (3,4,5) P3 | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29695532](https://bioregistry.io/pubmed:29695532)                                                            | 0000-0003-4423-4370 | 
+| text                            | curie                                             | scope                                                             | references                                                                                                           | contributor                                                              |
+|---------------------------------|---------------------------------------------------|-------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| PI(3,4,5)P3                     | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370)  |
+| phosphatidylinositol (3,4,5) P3 | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29695532](https://bioregistry.io/pubmed:29695532)                                                            | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370)  | 
 
 ### Incorrect Synonyms
 
@@ -47,14 +56,14 @@ rather helps dscribe issues like incorrect sub-string matching:
    using the Bioregistry
 3. `references` same as for `positives.tsv`, illustrating documents where this
    string appears
-4. `contributor_orcid` the ORCID identifier of the contributor
+4. `contributor` the ORCID identifier of the contributor
 
 Here's an example of some rows in the negative synonyms table (with linkified
 CURIEs):
 
-| text        | curie                                           | references                                                                                                           | contributor_orcid   |
-|-------------|-------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|---------------------|
-| PI(3,4,5)P3 | [hgnc:22979](https://bioregistry.io/hgnc:22979) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | 0000-0003-4423-4370 |
+| text        | curie                                           | references                                                                                                           | contributor                                                             |
+|-------------|-------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| PI(3,4,5)P3 | [hgnc:22979](https://bioregistry.io/hgnc:22979) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370) |
 
 ## Known Limitations
 
