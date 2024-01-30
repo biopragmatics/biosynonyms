@@ -2,7 +2,7 @@
 
 import csv
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Sequence, cast, List, Optional, Union
+from typing import TYPE_CHECKING, Iterable, List, Optional, Sequence, Union, cast
 
 import pandas as pd
 from curies import Reference
