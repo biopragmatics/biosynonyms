@@ -18,7 +18,7 @@ from collections import Counter
 from functools import partial
 from itertools import permutations
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, cast
 
 import bioregistry
 import click
@@ -63,7 +63,9 @@ def ensure_procesed_statements() -> Path:
     # s3://bigmech/indra-db/dumps/principal/2023-05-05/processed_statements.tsv.gz
     bucket = "bigmech"
     key = "indra-db/dumps/principal/2023-05-05/processed_statements.tsv.gz"
-    return MODULE.ensure_from_s3("principal", "2023-05-05", s3_bucket=bucket, s3_key=key)
+    return cast(
+        Path, MODULE.ensure_from_s3("principal", "2023-05-05", s3_bucket=bucket, s3_key=key)
+    )
 
 
 def norm(s: str) -> str:
@@ -93,9 +95,9 @@ def get_agent_curie_tuple(agent: Agent, *, grounder: gilda.Grounder) -> Referenc
     return _norm_strict(scored_match.term.db, scored_match.term.id)
 
 
-@click.command()
-@click.option("--size", type=int, default=32)
-@force_option
+@click.command()  # type:ignore
+@click.option("--size", type=int, default=32)  # type:ignore
+@force_option  # type:ignore
 def main(size: int, force: bool) -> None:
     """Generate synonym predictions."""
     if not EMBEDDINGS_PATH.is_file() or force:

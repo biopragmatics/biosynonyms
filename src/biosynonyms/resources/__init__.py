@@ -2,7 +2,19 @@
 
 import csv
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Optional, Sequence, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 import pandas as pd
 from curies import Reference
@@ -39,17 +51,17 @@ SYNONYM_SCOPES = {
 }
 
 
-def sort_key(row: Sequence[str]) -> tuple[str, str, str, str]:
+def sort_key(row: Sequence[str]) -> Tuple[str, str, str, str]:
     """Return a key for sorting a row."""
     return row[0].casefold(), row[0], row[1].casefold(), row[1]
 
 
-def load_unentities() -> set[str]:
+def load_unentities() -> Set[str]:
     """Load all strings that are known not to be named entities."""
     return {line[0] for line in _load_unentities()}
 
 
-def _load_unentities() -> Iterable[tuple[str, str]]:
+def _load_unentities() -> Iterable[Tuple[str, str]]:
     with UNENTITIES_PATH.open() as file:
         next(file)  # throw away header
         for line in file:
@@ -60,7 +72,7 @@ def _unentities_key(row: Sequence[str]) -> str:
     return row[0].casefold()
 
 
-def write_unentities(rows: Iterable[tuple[str, str]]) -> None:
+def write_unentities(rows: Iterable[Tuple[str, str]]) -> None:
     """Write all strings that are known not to be named entities."""
     with UNENTITIES_PATH.open("w") as file:
         print("text", "curator_orcid", sep="\t", file=file)  # noqa:T201
@@ -75,7 +87,7 @@ class Synonym(BaseModel):
     reference: Reference
     name: str
     scope: Reference = Field(default=Reference.from_curie("oboInOwl:hasSynonym"))
-    type: Reference | None = Field(
+    type: Optional[Reference] = Field(
         default=None,
         title="Synonym type",
         description="See the OBO Metadata Ontology for valid values",
@@ -84,7 +96,7 @@ class Synonym(BaseModel):
     contributor: Reference
 
     @classmethod
-    def from_row(cls, row) -> "Synonym":
+    def from_row(cls, row: Dict[str, Any]) -> "Synonym":
         """Parse a dictionary representing a row in a TSV."""
         return cls(
             text=row["text"],
@@ -123,7 +135,7 @@ class Synonym(BaseModel):
         )
 
 
-def _safe_parse_curie(x) -> Optional[Reference]:
+def _safe_parse_curie(x) -> Optional[Reference]:  # type:ignore
     if pd.isna(x) or not x.strip():
         return None
     return Reference.from_curie(x.strip())
