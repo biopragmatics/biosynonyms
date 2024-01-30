@@ -2,7 +2,19 @@
 
 import csv
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Sequence, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 import pandas as pd
 from curies import Reference
@@ -39,28 +51,28 @@ SYNONYM_SCOPES = {
 }
 
 
-def sort_key(row: Sequence[str]) -> tuple[str, str, str, str]:
+def sort_key(row: Sequence[str]) -> Tuple[str, str, str, str]:
     """Return a key for sorting a row."""
     return row[0].casefold(), row[0], row[1].casefold(), row[1]
 
 
-def load_unentities() -> set[str]:
+def load_unentities() -> Set[str]:
     """Load all strings that are known not to be named entities."""
     return {line[0] for line in _load_unentities()}
 
 
-def _load_unentities() -> Iterable[tuple[str, str]]:
+def _load_unentities() -> Iterable[Tuple[str, str]]:
     with UNENTITIES_PATH.open() as file:
         next(file)  # throw away header
         for line in file:
-            yield cast(tuple[str, str], line.strip().split("\t"))
+            yield cast(Tuple[str, str], line.strip().split("\t"))
 
 
 def _unentities_key(row: Sequence[str]) -> str:
     return row[0].casefold()
 
 
-def write_unentities(rows: Iterable[tuple[str, str]]) -> None:
+def write_unentities(rows: Iterable[Tuple[str, str]]) -> None:
     """Write all strings that are known not to be named entities."""
     with UNENTITIES_PATH.open("w") as file:
         print("text", "curator_orcid", sep="\t", file=file)  # noqa:T201
@@ -75,16 +87,16 @@ class Synonym(BaseModel):
     reference: Reference
     name: str
     scope: Reference = Field(default=Reference.from_curie("oboInOwl:hasSynonym"))
-    type: Reference | None = Field(
+    type: Optional[Reference] = Field(
         default=None,
         title="Synonym type",
         description="See the OBO Metadata Ontology for valid values",
     )
-    provenance: list[Reference] = Field(default_factory=list)
+    provenance: List[Reference] = Field(default_factory=list)
     contributor: Reference
 
     @classmethod
-    def from_row(cls, row) -> "Synonym":
+    def from_row(cls, row: Dict[str, Any]) -> "Synonym":
         """Parse a dictionary representing a row in a TSV."""
         return cls(
             text=row["text"],
@@ -123,23 +135,23 @@ class Synonym(BaseModel):
         )
 
 
-def _safe_parse_curie(x) -> Reference | None:
+def _safe_parse_curie(x) -> Optional[Reference]:  # type:ignore
     if pd.isna(x) or not x.strip():
         return None
     return Reference.from_curie(x.strip())
 
 
-def get_positive_synonyms() -> list[Synonym]:
+def get_positive_synonyms() -> List[Synonym]:
     """Get positive synonyms curated in Biosynonyms."""
     return parse_synonyms(POSITIVES_PATH)
 
 
-def get_negative_synonyms() -> list[Synonym]:
+def get_negative_synonyms() -> List[Synonym]:
     """Get negative synonyms curated in Biosynonyms."""
     return parse_synonyms(NEGATIVES_PATH)
 
 
-def parse_synonyms(path: str | Path) -> list[Synonym]:
+def parse_synonyms(path: Union[str, Path]) -> List[Synonym]:
     """Load synonyms from a file."""
     path = Path(path).resolve()
     with path.open() as file:

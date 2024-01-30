@@ -18,7 +18,7 @@ from collections import Counter
 from functools import partial
 from itertools import permutations
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, List, Set, Tuple, cast
 
 import bioregistry
 import click
@@ -54,8 +54,8 @@ EMBEDDINGS_PATH = MODULE.join(name="biosynonyms_embeddings.parquet")
 PLOT_PATH = MODULE.join(name="plot.png")
 TEXT_PREFIX = "text"
 
-Row = tuple[ReferenceTuple, ReferenceTuple]
-Rows = list[Row]
+Row = Tuple[ReferenceTuple, ReferenceTuple]
+Rows = List[Row]
 
 
 def ensure_procesed_statements() -> Path:
@@ -63,7 +63,9 @@ def ensure_procesed_statements() -> Path:
     # s3://bigmech/indra-db/dumps/principal/2023-05-05/processed_statements.tsv.gz
     bucket = "bigmech"
     key = "indra-db/dumps/principal/2023-05-05/processed_statements.tsv.gz"
-    return MODULE.ensure_from_s3("principal", "2023-05-05", s3_bucket=bucket, s3_key=key)
+    return cast(
+        Path, MODULE.ensure_from_s3("principal", "2023-05-05", s3_bucket=bucket, s3_key=key)
+    )
 
 
 def norm(s: str) -> str:
@@ -93,9 +95,9 @@ def get_agent_curie_tuple(agent: Agent, *, grounder: gilda.Grounder) -> Referenc
     return _norm_strict(scored_match.term.db, scored_match.term.id)
 
 
-@click.command()
-@click.option("--size", type=int, default=32)
-@force_option
+@click.command()  # type:ignore
+@click.option("--size", type=int, default=32)  # type:ignore
+@force_option  # type:ignore
 def main(size: int, force: bool) -> None:
     """Generate synonym predictions."""
     if not EMBEDDINGS_PATH.is_file() or force:
@@ -155,7 +157,7 @@ def get_graph(force: bool = False) -> "ensmallen.Graph":
         click.echo("Reading INDRA statements")
         with gzip.open(input_path, "rt") as file:
             click.echo(f"Opened {file.name}")
-            rows: set[Row] = set(
+            rows: Set[Row] = set(
                 itt.chain.from_iterable(func(line) for line in tqdm(file, **tqdm_kwargs))
             )
             # groups = process_map(
@@ -165,7 +167,7 @@ def get_graph(force: bool = False) -> "ensmallen.Graph":
             #     max_workers=4,
             #     chunksize=300_000,
             # )
-            # rows: set[Row] = set(itt.chain.from_iterable(groups))
+            # rows: Set[Row] = set(itt.chain.from_iterable(groups))
 
         sorted_rows = sorted(rows)
 
@@ -210,7 +212,7 @@ def _iter_names_from_rows(sorted_rows: Iterable[Row]) -> Iterable[str]:
             yield target.identifier
 
 
-def _line_to_rows(line: str, unentities: set[str], grounder: gilda.Grounder) -> Rows:
+def _line_to_rows(line: str, unentities: Set[str], grounder: gilda.Grounder) -> Rows:
     _assembled_hash, stmt_json_str = line.split("\t", 1)
     # why won't it strip the extra?!?!
     stmt_json_str = stmt_json_str.replace('""', '"').strip('"')[:-2]
@@ -221,7 +223,7 @@ def _line_to_rows(line: str, unentities: set[str], grounder: gilda.Grounder) -> 
 def _rows_from_stmt(
     stmt: Statement,
     *,
-    unentities: set[str],
+    unentities: Set[str],
     grounder: gilda.Grounder,
     complex_members: int = 3,
 ) -> Rows:
