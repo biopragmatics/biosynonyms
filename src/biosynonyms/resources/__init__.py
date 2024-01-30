@@ -101,11 +101,11 @@ def get_synonyms(path: str | Path) -> list[Synonym]:
                 reference=Reference.from_curie(curie),
                 name="",  # FIXME - include this in datamodel
                 scope=Reference.from_curie(scope),
-                type=_safe_parse_curie(scope),
+                type=_safe_parse_curie(stype),
                 provenance=[Reference.from_curie(x) for x in provenance.split(",")],
                 contributor=Reference(prefix="orcid", identifier=contributor),
             )
-            for text, curie, scope, type, provenance, contributor in reader
+            for text, curie, scope, stype, provenance, contributor in reader
         ]
 
 
