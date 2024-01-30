@@ -12,11 +12,16 @@ if TYPE_CHECKING:
     import gilda
 
 __all__ = [
+    # Data model
+    "Synonym",
+    # Get at the data
+    "get_positive_synonyms",
+    "get_negative_synonyms",
     "load_unentities",
+    "write_unentities",
+    # Utilities
     "get_gilda_terms",
     "parse_synonyms",
-    "write_unentities",
-    "Synonym",
 ]
 
 HERE = Path(__file__).parent.resolve()
@@ -80,7 +85,7 @@ class Synonym(BaseModel):
 
     @classmethod
     def from_row(cls, row) -> "Synonym":
-        """Parse a dictionary representing a row in a TSV"""
+        """Parse a dictionary representing a row in a TSV."""
         return cls(
             text=row["text"],
             reference=Reference.from_curie(row["curie"]),
