@@ -1,11 +1,27 @@
-# biosynonyms
+# Biosynonyms
 
 A decentralized database of synonyms for biomedical entities and concepts. This
 resource is meant to be complementary to ontologies, databases, and other
 controlled vocabularies that provide synonyms. It's released under a permissive
-license so they can be easily adopted by/contributed back to upstream resources.
+license (CC0), so they can be easily adopted by/contributed back to upstream resources.
+
+Here's how to get the data:
+
+```python
+import biosynonyms
+
+# Uses an internal data structure
+positive_synonyms = biosynonyms.get_positive_synonyms()
+negative_synonyms = biosynonyms.get_negative_synonyms()
+
+# Get ready for use in NER with Gilda, only using positive synonyms
+gilda_terms = biosynonyms.get_gilda_terms()
+```
 
 ### Synonyms
+
+The data are also accessible directly through TSV such that anyone can consume them
+from any programming language.
 
 The [`positives.tsv`](src/biosynonyms/resources/positives.tsv) has the following
 columns:
@@ -23,13 +39,14 @@ columns:
     - `oboInOwl:hasRelatedSynonym`
     - `oboInOwl:hasSynonym` (use this if the scope is unknown)
 5. `type` the synonym property type, written as a CURIE from
-   the [OBO Metadata Ontology (`omo`)](https://bioregistry.io/omo) controlled vocabulary, 
+   the [OBO Metadata Ontology (`omo`)](https://bioregistry.io/omo) controlled vocabulary,
    e.g., one of:
-   - `OMO:0003000` (abbreviation)
-   - `OMO:0003001` (ambiguous synonym)
-   - `OMO:0003002` (dubious synonym)
-   - `OMO:0003003` (layperson synonym)
-   - `OMO:0003004` (plural form)
+    - `OMO:0003000` (abbreviation)
+    - `OMO:0003001` (ambiguous synonym)
+    - `OMO:0003002` (dubious synonym)
+    - `OMO:0003003` (layperson synonym)
+    - `OMO:0003004` (plural form)
+    - ...
 6. `references` a comma-delimited list of CURIEs corresponding to publications
    that use the given synonym (ideally using highly actionable identifiers from
    semantic spaces like [`pubmed`](https://bioregistry.io/pubmed),
@@ -38,10 +55,10 @@ columns:
 
 Here's an example of some rows in the synonyms table (with linkified CURIEs):
 
-| text                            | curie                                             | scope                                                             | references                                                                                                           | contributor                                                              |
-|---------------------------------|---------------------------------------------------|-------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
-| PI(3,4,5)P3                     | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370)  |
-| phosphatidylinositol (3,4,5) P3 | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29695532](https://bioregistry.io/pubmed:29695532)                                                            | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370)  | 
+| text                            | curie                                             | scope                                                             | references                                                                                                           | contributor                                                             |
+|---------------------------------|---------------------------------------------------|-------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| PI(3,4,5)P3                     | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370) |
+| phosphatidylinositol (3,4,5) P3 | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29695532](https://bioregistry.io/pubmed:29695532)                                                            | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370) | 
 
 ### Incorrect Synonyms
 
