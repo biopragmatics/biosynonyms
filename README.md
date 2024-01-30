@@ -1,5 +1,7 @@
 # Biosynonyms
 
+<a href="https://zenodo.org/doi/10.5281/zenodo.10592265"><img src="https://zenodo.org/badge/490189661.svg" alt="DOI"></a>
+
 A decentralized database of synonyms for biomedical entities and concepts. This
 resource is meant to be complementary to ontologies, databases, and other
 controlled vocabularies that provide synonyms. It's released under a permissive
