@@ -1,5 +1,7 @@
 """Resources for Biosynonyms."""
 
+from __future__ import annotations
+
 import csv
 from pathlib import Path
 from typing import (
@@ -8,6 +10,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Mapping,
     Optional,
     Sequence,
     Set,
@@ -19,6 +22,7 @@ from typing import (
 import pandas as pd
 from curies import Reference
 from pydantic import BaseModel, Field
+from pydantic_extra_types.language_code import LanguageAlpha2
 
 if TYPE_CHECKING:
     import gilda
@@ -80,28 +84,67 @@ def write_unentities(rows: Iterable[Tuple[str, str]]) -> None:
             print(*row, sep="\t", file=file)  # noqa:T201
 
 
+def _clean_str(s: str) -> str:
+    return s
+
+
 class Synonym(BaseModel):
     """A data model for synonyms."""
 
     text: str
     reference: Reference
     name: str
-    scope: Reference = Field(default=Reference.from_curie("oboInOwl:hasSynonym"))
+    scope: Reference = Field(
+        default=Reference.from_curie("oboInOwl:hasSynonym"),
+        description="The predicate that connects the term (as subject) to the textual synonym (as object)",
+    )
     type: Optional[Reference] = Field(
         default=None,
         title="Synonym type",
         description="See the OBO Metadata Ontology for valid values",
     )
-    provenance: List[Reference] = Field(default_factory=list)
-    contributor: Reference
+    provenance: List[Reference] = Field(
+        default_factory=list,
+        description="A list of articles (e.g., from PubMed, PMC, arXiv) where this synonym appears",
+    )
+    contributor: Reference = Field(
+        ..., description="The contributor, usually given as a reference to ORCID"
+    )
+    language: Optional[LanguageAlpha2] = Field(
+        None,
+        description="The language of the synonym. If not given, typically assumed to be american english.",
+    )
+    comment: Optional[str] = Field(
+        None, description="An optional comment on the synonym curation or status"
+    )
+    source: Optional[str] = Field(
+        ..., description="The name of the resource where the synonym was curated"
+    )
+
+    @property
+    def curie(self) -> str:
+        """Get the reference's CURIE."""
+        return cast(str, self.reference.curie)
+
+    @property
+    def text_for_turtle(self) -> str:
+        """Get the text ready for an object slot in Turtle, with optional language tag."""
+        tt = f'"{_clean_str(self.text)}"'
+        if self.language:
+            tt += f"@{self.language}"
+        return tt
 
     @classmethod
-    def from_row(cls, row: Dict[str, Any]) -> "Synonym":
+    def from_row(
+        cls, row: Dict[str, Any], *, names: Optional[Mapping[Reference, str]] = None
+    ) -> "Synonym":
         """Parse a dictionary representing a row in a TSV."""
+        reference = Reference.from_curie(row["curie"])
+        name = (names or {}).get(reference) or row.get("name") or row["text"]
         return cls(
             text=row["text"],
-            reference=Reference.from_curie(row["curie"]),
-            name=row["name"],
+            reference=reference,
+            name=name,
             scope=(
                 Reference.from_curie(row["scope"])
                 if "scope" in row
@@ -114,6 +157,9 @@ class Synonym(BaseModel):
                 if provenance_curie.strip()
             ],
             contributor=Reference(prefix="orcid", identifier=row["contributor"]),
+            language=row.get("language") or None,  # get("X") or None protects against empty strings
+            comment=row.get("comment") or None,
+            source=row.get("source") or None,
         )
 
     def as_gilda_term(self) -> "gilda.Term":
@@ -151,11 +197,36 @@ def get_negative_synonyms() -> List[Synonym]:
     return parse_synonyms(NEGATIVES_PATH)
 
 
-def parse_synonyms(path: Union[str, Path]) -> List[Synonym]:
+def parse_synonyms(
+    path: Union[str, Path],
+    *,
+    delimiter: Optional[str] = None,
+    names: Optional[Mapping[Reference, str]] = None,
+) -> List[Synonym]:
     """Load synonyms from a file."""
+    if isinstance(path, str) and any(path.startswith(schema) for schema in ("https://", "http://")):
+        import requests
+
+        res = requests.get(path, timeout=15)
+        res.raise_for_status()
+        return _from_lines(res.iter_lines(decode_unicode=True), delimiter=delimiter, names=names)
+
     path = Path(path).resolve()
     with path.open() as file:
-        return [Synonym.from_row(d) for d in csv.DictReader(file, delimiter="\t")]
+        return _from_lines(file, delimiter=delimiter, names=names)
+
+
+def _from_lines(
+    lines: Iterable[str],
+    *,
+    delimiter: Optional[str] = None,
+    names: Optional[Mapping[Reference, str]] = None,
+) -> List[Synonym]:
+    return [
+        Synonym.from_row(d, names=names)
+        for d in csv.DictReader(lines, delimiter=delimiter or "\t")
+        if d
+    ]
 
 
 def get_gilda_terms() -> Iterable["gilda.Term"]:

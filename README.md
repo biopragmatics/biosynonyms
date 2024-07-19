@@ -32,15 +32,15 @@ columns:
 2. `curie` the compact uniform resource identifier (CURIE) for a biomedical
    entity or concept, standardized using the Bioregistry
 3. `name` the standard name for the concept
-4. `scope` the match type, written as a CURIE from
+4. `predicate` the predicate which encodes the synonym scope, written as a CURIE from
    the [OBO in OWL (`oio`)](https://bioregistry.io/oio) controlled vocabulary,
    i.e., one of:
     - `oboInOwl:hasExactSynonym`
-    - `oboInOwl:hasNarrowSynonym`
-    - `oboInOwl:hasBroadSynonym`
+    - `oboInOwl:hasNarrowSynonym` (i.e., the synonym represents a narrower term)
+    - `oboInOwl:hasBroadSynonym` (i.e., the synonym represents a broader term)
     - `oboInOwl:hasRelatedSynonym`
     - `oboInOwl:hasSynonym` (use this if the scope is unknown)
-5. `type` the synonym property type, written as a CURIE from
+5. `type` the (optional) synonym property type, written as a CURIE from
    the [OBO Metadata Ontology (`omo`)](https://bioregistry.io/omo) controlled vocabulary,
    e.g., one of:
     - `OMO:0003000` (abbreviation)
@@ -49,18 +49,19 @@ columns:
     - `OMO:0003003` (layperson synonym)
     - `OMO:0003004` (plural form)
     - ...
-6. `references` a comma-delimited list of CURIEs corresponding to publications
+6. `provenance` a comma-delimited list of CURIEs corresponding to publications
    that use the given synonym (ideally using highly actionable identifiers from
    semantic spaces like [`pubmed`](https://bioregistry.io/pubmed),
    [`pmc`](https://bioregistry.io/pmc), [`doi`](https://bioregistry.io/doi))
 7. `contributor` the ORCID identifier of the contributor
+8. `language` the (optional) ISO 2-letter language code. If missing, assumed to be American English.
 
 Here's an example of some rows in the synonyms table (with linkified CURIEs):
 
-| text                            | curie                                             | scope                                                             | references                                                                                                           | contributor                                                             |
-|---------------------------------|---------------------------------------------------|-------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| PI(3,4,5)P3                     | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370) |
-| phosphatidylinositol (3,4,5) P3 | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29695532](https://bioregistry.io/pubmed:29695532)                                                            | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370) | 
+| text                            | curie                                             | scope                                                             | provenance                                                                                                           | contributor                                                             | language |
+|---------------------------------|---------------------------------------------------|-------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|----------|
+| PI(3,4,5)P3                     | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370) | en       |
+| phosphatidylinositol (3,4,5) P3 | [CHEBI:16618](https://bioregistry.io/CHEBI:16618) | [oio:hasExactSynonym](https://bioregistry.io/oio:hasExactSynonym) | [pubmed:29695532](https://bioregistry.io/pubmed:29695532)                                                            | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370) | en       |
 
 ### Incorrect Synonyms
 
@@ -76,13 +77,14 @@ rather helps dscribe issues like incorrect sub-string matching:
 3. `references` same as for `positives.tsv`, illustrating documents where this
    string appears
 4. `contributor` the ORCID identifier of the contributor
+5. `language` the (optional) ISO 2-letter language code. If missing, assumed to be American English.
 
 Here's an example of some rows in the negative synonyms table (with linkified
 CURIEs):
 
-| text        | curie                                           | references                                                                                                           | contributor                                                             |
-|-------------|-------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| PI(3,4,5)P3 | [hgnc:22979](https://bioregistry.io/hgnc:22979) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370) |
+| text        | curie                                           | provenance                                                                                                           | contributor                                                             | language |
+|-------------|-------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|----------|
+| PI(3,4,5)P3 | [hgnc:22979](https://bioregistry.io/hgnc:22979) | [pubmed:29623928](https://bioregistry.io/pubmed:29623928), [pubmed:20817957](https://bioregistry.io/pubmed:20817957) | [0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370) | en       |
 
 ## Known Limitations
 
