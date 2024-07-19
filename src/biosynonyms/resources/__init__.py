@@ -203,7 +203,13 @@ def parse_synonyms(
     delimiter: Optional[str] = None,
     names: Optional[Mapping[Reference, str]] = None,
 ) -> List[Synonym]:
-    """Load synonyms from a file."""
+    """Load synonyms from a file.
+
+    :param path: A local file path or URL for a biosynonyms-flavored CSV/TSV file
+    :param delimiter: The delimiter for the CSV/TSV file. Defaults to tab
+    :param names: A pre-parsed dictionary from references (i.e., prefix-luid pairs) to default labels
+    :returns: A list of synonym objects parsed from the table
+    """
     if isinstance(path, str) and any(path.startswith(schema) for schema in ("https://", "http://")):
         import requests
 
@@ -223,9 +229,9 @@ def _from_lines(
     names: Optional[Mapping[Reference, str]] = None,
 ) -> List[Synonym]:
     return [
-        Synonym.from_row(d, names=names)
-        for d in csv.DictReader(lines, delimiter=delimiter or "\t")
-        if d
+        Synonym.from_row(record, names=names)
+        for record in csv.DictReader(lines, delimiter=delimiter or "\t")
+        if record
     ]
 
 

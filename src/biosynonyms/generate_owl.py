@@ -1,10 +1,10 @@
 """Generate OWL from the positive synonyms."""
 
 import gzip
-from collections import defaultdict
+from collections import ChainMap, defaultdict
 from pathlib import Path
 from textwrap import dedent
-from typing import Mapping, Optional, TextIO, Union
+from typing import Dict, Mapping, Optional, TextIO, Union
 
 import bioregistry
 from curies import Reference
@@ -131,30 +131,31 @@ def write_owl_rdf_gz() -> None:
         _write_owl_rdf(get_positive_synonyms(), file, metadata=METADATA)
 
 
+DEFAULT_PREFIXES: Dict[str, str] = dict(
+    # rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    rdfs="http://www.w3.org/2000/01/rdf-schema#",
+    dcterms="http://purl.org/dc/terms/",
+    owl="http://www.w3.org/2002/07/owl#",
+    oboInOwl="http://www.geneontology.org/formats/oboInOwl#",
+    #  skos="http://www.w3.org/2004/02/skos/core#",
+    orcid="https://orcid.org/",
+    OMO="http://purl.obolibrary.org/obo/OMO_",
+    NCBITaxon="http://purl.obolibrary.org/obo/NCBITaxon_",
+)
+
+
 def _write_owl_rdf(
     synonyms: list[Synonym],
     file: TextIO,
     *,
     metadata: str | None = None,
+    prefix_map: Optional[Dict[str, str]] = None,
 ) -> None:
     dd = defaultdict(list)
     for synonym in tqdm(
         synonyms, unit="synonym", unit_scale=True, desc="Indexing synonyms", leave=False
     ):
         dd[synonym.reference].append(synonym)
-
-    prefixes = dict(
-        # rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-        rdfs="http://www.w3.org/2000/01/rdf-schema#",
-        dcterms="http://purl.org/dc/terms/",
-        owl="http://www.w3.org/2002/07/owl#",
-        oboInOwl="http://www.geneontology.org/formats/oboInOwl#",
-        #  skos="http://www.w3.org/2004/02/skos/core#",
-        orcid="https://orcid.org/",
-        OMO="http://purl.obolibrary.org/obo/OMO_",
-        NCBITaxon="http://purl.obolibrary.org/obo/NCBITaxon_",
-        QUALO="http://purl.obolibrary.org/obo/QUALO_",
-    )
 
     # Get all the prefixes used for references
     extra_prefixes: set[str] = {reference.prefix for reference in dd}
@@ -166,16 +167,23 @@ def _write_owl_rdf(
         for reference in synonym.provenance
     )
 
+    looked_up_prefix_map: Dict[str, str] = {}
     for prefix in extra_prefixes:
-        if prefix not in prefixes:
-            uri_prefix = bioregistry.get_uri_prefix(prefix)
+        if prefix_map and prefix in prefix_map:
+            pass  # given explicitly, no need to look up in bioregistry
+        elif prefix not in looked_up_prefix_map:
+            resource = bioregistry.get_resource(prefix)
+            if resource is None:
+                raise ValueError(f"Prefix {prefix} is not registered in the Bioregistry")
+            uri_prefix = resource.rdf_uri_format or resource.get_uri_prefix()
             if uri_prefix is None:
                 raise ValueError(
                     f"Prefix has no URI expansion in Bioregistry: {prefix} ({bioregistry.get_name(prefix)})"
                 )
-            prefixes[prefix] = uri_prefix
+            looked_up_prefix_map[prefix] = uri_prefix
 
-    for prefix, uri_prefix in prefixes.items():
+    chained_prefix_map = ChainMap(DEFAULT_PREFIXES, looked_up_prefix_map, prefix_map or {})
+    for prefix, uri_prefix in sorted(chained_prefix_map.items(), key=lambda i: i[0].lower()):
         file.write(f"@prefix {prefix}: <{uri_prefix}> .\n")
 
     if metadata:
@@ -250,7 +258,9 @@ def _main() -> None:
     synonyms = parse_synonyms(synonyms_url, names=names)
     qualo_path = EXPORT.joinpath("qualo_synonyms.ttl")
     with open(qualo_path, "w") as file:
-        _write_owl_rdf(synonyms, file)
+        _write_owl_rdf(
+            synonyms, file, prefix_map={"QUALO": "http://purl.obolibrary.org/obo/QUALO_"}
+        )
 
     write_owl_rdf()
 
