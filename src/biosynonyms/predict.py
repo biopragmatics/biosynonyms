@@ -64,7 +64,8 @@ def ensure_procesed_statements() -> Path:
     bucket = "bigmech"
     key = "indra-db/dumps/principal/2023-05-05/processed_statements.tsv.gz"
     return cast(
-        Path, MODULE.ensure_from_s3("principal", "2023-05-05", s3_bucket=bucket, s3_key=key)
+        Path,
+        MODULE.ensure_from_s3("principal", "2023-05-05", s3_bucket=bucket, s3_key=key),
     )
 
 

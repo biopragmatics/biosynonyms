@@ -45,7 +45,18 @@ class TestIntegrity(unittest.TestCase):
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
                 self.assertEqual(10, len(row))
-                text, curie, _name, scope, synonym_type, references, orcid, lang, comment, src = row
+                (
+                    text,
+                    curie,
+                    _name,
+                    scope,
+                    synonym_type,
+                    references,
+                    orcid,
+                    lang,
+                    comment,
+                    src,
+                ) = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
                 self.assertIn(scope, SYNONYM_SCOPES)
@@ -82,7 +93,9 @@ class TestIntegrity(unittest.TestCase):
 
         # test sorted
         self.assertEqual(
-            sorted(rows, key=sort_key), rows, msg="negative synonyms are not properly sorted"
+            sorted(rows, key=sort_key),
+            rows,
+            msg="negative synonyms are not properly sorted",
         )
 
         # test no duplicates
