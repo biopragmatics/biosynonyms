@@ -340,6 +340,7 @@ chebi:16618 a owl:Class ;
     owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "phosphatidylinositol (3,4,5) P3"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
+    dcterms:date "2022-05-09"^^xsd:date ;
     dcterms:source "biosynonyms" ;
     oboInOwl:hasDbXref pubmed:29695532 .
 ] .
@@ -349,6 +350,7 @@ chebi:16618 a owl:Class ;
     owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "PI(3,4,5)P3"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
+    dcterms:date "2022-05-09"^^xsd:date ;
     dcterms:source "biosynonyms" ;
     oboInOwl:hasDbXref pubmed:29623928 ;
     oboInOwl:hasDbXref pubmed:20817957 ;

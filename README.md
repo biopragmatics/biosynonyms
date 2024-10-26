@@ -54,7 +54,10 @@ columns:
    semantic spaces like [`pubmed`](https://bioregistry.io/pubmed),
    [`pmc`](https://bioregistry.io/pmc), [`doi`](https://bioregistry.io/doi))
 7. `contributor` the ORCID identifier of the contributor
-8. `language` the (optional) ISO 2-letter language code. If missing, assumed to be American English.
+8. `date` the optional date when the row was curated in YYYY-MM-DD format
+9. `language` the (optional) ISO 2-letter language code. If missing, assumed to be American English.
+10. `comment` an optional comment
+11. `source` the source of the synonyms, usually `biosynonyms` unless imported from elsewhere
 
 Here's an example of some rows in the synonyms table (with linkified CURIEs):
 

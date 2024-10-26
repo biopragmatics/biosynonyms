@@ -120,14 +120,19 @@ class Synonym(BaseModel):
         None, description="An optional comment on the synonym curation or status"
     )
     source: Optional[str] = Field(
-        ..., description="The name of the resource where the synonym was curated"
+        None, description="The name of the resource where the synonym was curated"
     )
-    date: Optional[datetime.datetime] = Field(..., description="The date of initial curation")
+    date: Optional[datetime.datetime] = Field(None, description="The date of initial curation")
 
     @property
     def curie(self) -> str:
         """Get the reference's CURIE."""
         return cast(str, self.reference.curie)
+
+    @property
+    def date_str(self) -> str:
+        """Get the date as a string."""
+        return self.date.strftime("%Y-%m-%d")
 
     @property
     def text_for_turtle(self) -> str:
@@ -149,7 +154,7 @@ class Synonym(BaseModel):
             reference=reference,
             name=name,
             scope=(
-                Reference.from_curie(scope_curie)
+                Reference.from_curie(scope_curie.strip())
                 if (scope_curie := row.get("scope"))
                 else Reference.from_curie("oboInOwl:hasSynonym")
             ),
@@ -159,16 +164,15 @@ class Synonym(BaseModel):
                 for provenance_curie in (row.get("provenance") or "").split(",")
                 if provenance_curie.strip()
             ],
-            contributor=(
-                Reference(prefix="orcid", identifier=row["contributor"])
-                if "contributor" in row
-                else None
-            ),
             language=row.get("language") or None,  # get("X") or None protects against empty strings
             comment=row.get("comment") or None,
             source=row.get("source") or None,
-            date=row.get("date") or None,
         )
+        if contributor := (row.get("contributor") or "").strip():
+            data['contributor'] = Reference(prefix="orcid", identifier=contributor)
+        if date := (row.get("date") or "").strip():
+            data["date"] = datetime.datetime.strptime(date, "%Y-%m-%d")
+
         return cls.model_validate(data)
 
     @classmethod

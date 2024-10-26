@@ -197,6 +197,8 @@ def _write_owl_rdf(
             axiom_parts = [
                 f"dcterms:contributor {synonym.contributor.curie}",
             ]
+            if synonym.date:
+                axiom_parts.append(f'dcterms:date "{synonym.date_str}"^^xsd:date')
             if synonym.source:
                 axiom_parts.append(f'dcterms:source "{_clean_str(synonym.source)}"')
             if synonym.type:
