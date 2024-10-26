@@ -132,6 +132,8 @@ class Synonym(BaseModel):
     @property
     def date_str(self) -> str:
         """Get the date as a string."""
+        if self.date is None:
+            raise ValueError("date is not set")
         return self.date.strftime("%Y-%m-%d")
 
     @property
