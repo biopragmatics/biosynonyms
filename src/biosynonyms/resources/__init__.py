@@ -169,7 +169,7 @@ class Synonym(BaseModel):
             source=row.get("source") or None,
         )
         if contributor := (row.get("contributor") or "").strip():
-            data['contributor'] = Reference(prefix="orcid", identifier=contributor)
+            data["contributor"] = Reference(prefix="orcid", identifier=contributor)
         if date := (row.get("date") or "").strip():
             data["date"] = datetime.datetime.strptime(date, "%Y-%m-%d")
 

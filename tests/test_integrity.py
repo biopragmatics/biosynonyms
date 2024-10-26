@@ -44,7 +44,7 @@ class TestIntegrity(unittest.TestCase):
 
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
-                self.assertEqual(10, len(row))
+                self.assertEqual(11, len(row))
                 (
                     text,
                     curie,
@@ -53,6 +53,7 @@ class TestIntegrity(unittest.TestCase):
                     synonym_type,
                     references,
                     orcid,
+                    date,
                     lang,
                     comment,
                     src,
@@ -66,6 +67,8 @@ class TestIntegrity(unittest.TestCase):
                     reference = reference.strip()
                     self.assert_curie(reference)
                 self.assert_curie(f"orcid:{orcid}")
+                if date:
+                    self.assertRegex(date, "\\d{4}-\\d{2}-\\d{2}")
 
         # test sorted
         self.assertEqual(sorted(rows, key=sort_key), rows, msg="synonyms are not properly sorted")
