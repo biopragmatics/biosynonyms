@@ -18,7 +18,6 @@ EXPORT = HERE.parent.parent.joinpath("exports")
 EXPORT.mkdir(exist_ok=True)
 
 TTL_PATH = EXPORT.joinpath("biosynonyms.ttl")
-OWL_PATH = EXPORT.joinpath("biosynoynms.owl")
 URI = "https://w3id.org/biopragmatics/resources/biosynonyms.ttl"
 
 METADATA = f"""\
@@ -233,20 +232,6 @@ def _write_owl_rdf(
             file.write("\n")
         for axiom in axiom_strs:
             file.write(dedent(axiom))
-
-
-def get_remote_curie_map(
-    path: Union[str, Path], key: str = "label", delimiter: Optional[str] = None
-) -> Mapping[Reference, str]:
-    """Get a one-to-one data column from a TSV for CURIEs."""
-    import pandas as pd
-
-    df = pd.read_csv(path, sep=delimiter or "\t")
-    return {Reference.from_curie(curie): value for curie, value in df[["curie", key]].values}
-
-
-def _restriction(prop: str, target: str) -> str:
-    return f"[ a owl:Restriction ; owl:onProperty {prop} ; owl:someValuesFrom {target} ]"
 
 
 if __name__ == "__main__":
