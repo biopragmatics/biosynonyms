@@ -151,13 +151,22 @@ def _get_prefixes(dd: dict[Reference, List[Synonym]]) -> Set[str]:
     }
 
 
-def _iter_prefix_map(
-    dd: dict[Reference, List[Synonym]],
+def write_prefix_map(
+    prefixes: Set[str], file: TextIO, *, prefix_map: Optional[Dict[str, str]] = None
+) -> None:
+    """Write the prefix map to the top of a turtle file."""
+    for prefix, uri_prefix in iter_prefix_map(prefixes, prefix_map=prefix_map):
+        file.write(f"@prefix {prefix}: <{uri_prefix}> .\n")
+
+
+def iter_prefix_map(
+    prefixes: Set[str],
     *,
     prefix_map: Optional[Dict[str, str]] = None,
 ) -> List[Tuple[str, str]]:
+    """Generate a prefix map."""
     looked_up_prefix_map: Dict[str, str] = {}
-    for prefix in _get_prefixes(dd):
+    for prefix in prefixes:
         if prefix_map and prefix in prefix_map:
             pass  # given explicitly, no need to look up in bioregistry
         elif prefix not in looked_up_prefix_map:
@@ -175,6 +184,39 @@ def _iter_prefix_map(
     return sorted(chained_prefix_map.items(), key=lambda i: i[0].casefold())
 
 
+def get_axiom_str(reference: Reference, synonym: Synonym) -> Optional[str]:
+    """Get the axiom string for a synonym."""
+    axiom_parts = []
+    if synonym.contributor:
+        axiom_parts.append(f"dcterms:contributor {synonym.contributor.curie}")
+    if synonym.date:
+        axiom_parts.append(f'dcterms:date "{synonym.date_str}"^^xsd:date')
+    if synonym.source:
+        axiom_parts.append(f'dcterms:source "{_clean_str(synonym.source)}"')
+    if synonym.type:
+        axiom_parts.append(f"oboInOwl:hasSynonymType {synonym.type.curie}")
+    for rr in synonym.provenance:
+        axiom_parts.append(f"oboInOwl:hasDbXref {rr.curie}")
+    if synonym.comment:
+        axiom_parts.append(f'rdfs:comment "{_clean_str(synonym.comment)}"')
+
+    if not axiom_parts:
+        # if there's no additional context to add, then we don't need to make an axiom
+        return None
+
+    axiom_parts_str = " ;\n".join(f"    {ax}" for ax in axiom_parts) + " ."
+    axiom = f"""\
+[
+    a owl:Axiom ;
+    owl:annotatedSource {reference.curie} ;
+    owl:annotatedProperty {synonym.scope.curie} ;
+    owl:annotatedTarget {synonym.text_for_turtle} ;
+{axiom_parts_str}
+] .
+"""
+    return axiom
+
+
 def _write_owl_rdf(
     synonyms: list[Synonym],
     file: TextIO,
@@ -189,8 +231,7 @@ def _write_owl_rdf(
     dd = group_synonyms(synonyms)
 
     if prefix_definitions:
-        for prefix, uri_prefix in _iter_prefix_map(dd, prefix_map=prefix_map):
-            file.write(f"@prefix {prefix}: <{uri_prefix}> .\n")
+        write_prefix_map(_get_prefixes(dd), file=file, prefix_map=prefix_map)
 
     if metadata:
         file.write(f"\n{metadata}\n")
@@ -202,36 +243,8 @@ def _write_owl_rdf(
         axiom_strs = []
         for synonym in synonyms:
             mains.append(f"{synonym.scope.curie} {synonym.text_for_turtle}")
-
-            axiom_parts = []
-            if synonym.contributor:
-                axiom_parts.append(f"dcterms:contributor {synonym.contributor.curie}")
-            if synonym.date:
-                axiom_parts.append(f'dcterms:date "{synonym.date_str}"^^xsd:date')
-            if synonym.source:
-                axiom_parts.append(f'dcterms:source "{_clean_str(synonym.source)}"')
-            if synonym.type:
-                axiom_parts.append(f"oboInOwl:hasSynonymType {synonym.type.curie}")
-            for rr in synonym.provenance:
-                axiom_parts.append(f"oboInOwl:hasDbXref {rr.curie}")
-            if synonym.comment:
-                axiom_parts.append(f'rdfs:comment "{_clean_str(synonym.comment)}"')
-
-            if not axiom_parts:
-                # if there's no additional context to add, then we don't need to make an axiom
-                continue
-
-            axiom_parts_str = " ;\n".join(f"    {ax}" for ax in axiom_parts) + " ."
-            axiom = f"""\
-[
-    a owl:Axiom ;
-    owl:annotatedSource {reference.curie} ;
-    owl:annotatedProperty {synonym.scope.curie} ;
-    owl:annotatedTarget {synonym.text_for_turtle} ;
-{axiom_parts_str}
-] .
-"""
-            axiom_strs.append(axiom)
+            axiom_str = get_axiom_str(reference, synonym)
+            axiom_strs.append(axiom_str)
 
         if class_definitions:
             file.write(f"\n{reference.curie} a owl:Class ;\n")
@@ -247,8 +260,8 @@ def _write_owl_rdf(
         file.write(" ;\n".join(f"    {m}" for m in mains) + " .\n")
         if axiom_strs:
             file.write("\n")
-        for axiom in axiom_strs:
-            file.write(dedent(axiom))
+        for axiom_str in axiom_strs:
+            file.write(dedent(axiom_str))
 
 
 if __name__ == "__main__":
