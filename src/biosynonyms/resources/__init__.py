@@ -21,6 +21,7 @@ from typing import (
 )
 
 import pandas as pd
+import requests
 from curies import Reference
 from pydantic import BaseModel, Field
 from pydantic_extra_types.language_code import LanguageAlpha2
@@ -217,28 +218,29 @@ def parse_synonyms(
     :param names: A pre-parsed dictionary from references (i.e., prefix-luid pairs) to default labels
     :returns: A list of synonym objects parsed from the table
     """
-    if isinstance(path, Path) and path.suffix == ".numbers":
-        # code example from https://pypi.org/project/numbers-parser
-        import numbers_parser
-
-        doc = numbers_parser.Document(path)
-        sheets = doc.sheets
-        tables = sheets[0].tables
-        header, *rows = tables[0].rows(values_only=True)
-        print(header)
-        print(rows[0])
-        return _from_dicts(dict(zip(header, row)) for row in rows)
-
     if isinstance(path, str) and any(path.startswith(schema) for schema in ("https://", "http://")):
-        import requests
-
         res = requests.get(path, timeout=15)
         res.raise_for_status()
         return _from_lines(res.iter_lines(decode_unicode=True), delimiter=delimiter, names=names)
 
     path = Path(path).resolve()
+
+    if path.suffix == ".numbers":
+        return _parse_numbers(path)
+
     with path.open() as file:
         return _from_lines(file, delimiter=delimiter, names=names)
+
+
+def _parse_numbers(path: Union[str, Path]) -> List[Synonym]:
+    # code example from https://pypi.org/project/numbers-parser
+    import numbers_parser
+
+    doc = numbers_parser.Document(path)
+    sheets = doc.sheets
+    tables = sheets[0].tables
+    header, *rows = tables[0].rows(values_only=True)
+    return _from_dicts(dict(zip(header, row)) for row in rows)
 
 
 def _from_lines(
@@ -262,7 +264,3 @@ def get_gilda_terms() -> Iterable["gilda.Term"]:
     """Get Gilda terms for all positive synonyms."""
     for synonym in parse_synonyms(POSITIVES_PATH):
         yield synonym.as_gilda_term()
-
-
-if __name__ == "__main__":
-    parse_synonyms(...)

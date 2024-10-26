@@ -32,7 +32,7 @@ columns:
 2. `curie` the compact uniform resource identifier (CURIE) for a biomedical
    entity or concept, standardized using the Bioregistry
 3. `name` the standard name for the concept
-4. `predicate` the predicate which encodes the synonym scope, written as a CURIE from
+4. `scope` the predicate which encodes the synonym scope, written as a CURIE from
    the [OBO in OWL (`oio`)](https://bioregistry.io/oio) controlled vocabulary,
    i.e., one of:
     - `oboInOwl:hasExactSynonym`
