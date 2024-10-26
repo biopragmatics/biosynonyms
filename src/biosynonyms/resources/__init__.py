@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import datetime
+from collections import defaultdict
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -25,6 +26,7 @@ import requests
 from curies import Reference
 from pydantic import BaseModel, Field
 from pydantic_extra_types.language_code import LanguageAlpha2
+from tqdm import tqdm
 
 if TYPE_CHECKING:
     import gilda
@@ -297,3 +299,11 @@ def get_gilda_terms() -> Iterable["gilda.Term"]:
     """Get Gilda terms for all positive synonyms."""
     for synonym in parse_synonyms(POSITIVES_PATH):
         yield synonym.as_gilda_term()
+
+
+def group_synonyms(synonyms: Iterable[Synonym]) -> dict[Reference, List[Synonym]]:
+    """Aggregate synonyms by reference."""
+    dd: defaultdict[Reference, List[Synonym]] = defaultdict(list)
+    for synonym in tqdm(synonyms, unit="synonym", unit_scale=True, leave=False):
+        dd[synonym.reference].append(synonym)
+    return dict(dd)

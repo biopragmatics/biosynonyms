@@ -1,16 +1,17 @@
 """Generate OWL from the positive synonyms."""
 
 import gzip
-from collections import ChainMap, defaultdict
+from collections import ChainMap
 from pathlib import Path
 from textwrap import dedent
-from typing import Dict, Optional, TextIO
+from typing import Annotated, Any, Dict, List, Optional, TextIO, Tuple
 
 import bioregistry
-from tqdm import tqdm
+from curies import Reference
+from typing_extensions import Doc
 
 from biosynonyms import Synonym, get_positive_synonyms
-from biosynonyms.resources import _clean_str
+from biosynonyms.resources import _clean_str, group_synonyms
 
 HERE = Path(__file__).parent.resolve()
 EXPORT = HERE.parent.parent.joinpath("exports")
@@ -115,16 +116,16 @@ OMO:0003012 a owl:AnnotationProperty;
 """
 
 
-def write_owl_rdf() -> None:
+def write_owl_rdf(**kwargs: Any) -> None:
     """Write OWL RDF in a Turtle file."""
     with open(TTL_PATH, "w") as file:
-        _write_owl_rdf(get_positive_synonyms(), file, metadata=METADATA)
+        _write_owl_rdf(get_positive_synonyms(), file, metadata=METADATA, **kwargs)
 
 
-def write_owl_rdf_gz() -> None:
+def write_owl_rdf_gz(**kwargs: Any) -> None:
     """Write OWL RDF in a gzipped Turtle file."""
     with gzip.open(TTL_PATH.with_suffix(".gz"), "wt") as file:
-        _write_owl_rdf(get_positive_synonyms(), file, metadata=METADATA)
+        _write_owl_rdf(get_positive_synonyms(), file, metadata=METADATA, **kwargs)
 
 
 DEFAULT_PREFIXES: Dict[str, str] = dict(
@@ -141,19 +142,11 @@ DEFAULT_PREFIXES: Dict[str, str] = dict(
 )
 
 
-def _write_owl_rdf(
-    synonyms: list[Synonym],
-    file: TextIO,
+def _iter_prefix_map(
+    dd: dict[Reference, List[Synonym]],
     *,
-    metadata: Optional[str] = None,
     prefix_map: Optional[Dict[str, str]] = None,
-) -> None:
-    dd = defaultdict(list)
-    for synonym in tqdm(
-        synonyms, unit="synonym", unit_scale=True, desc="Indexing synonyms", leave=False
-    ):
-        dd[synonym.reference].append(synonym)
-
+) -> List[Tuple[str, str]]:
     # Get all the prefixes used for references
     extra_prefixes: set[str] = {reference.prefix for reference in dd}
     # Add all the prefixes appearing in provenance
@@ -180,8 +173,25 @@ def _write_owl_rdf(
             looked_up_prefix_map[prefix] = uri_prefix
 
     chained_prefix_map = ChainMap(DEFAULT_PREFIXES, looked_up_prefix_map, prefix_map or {})
-    for prefix, uri_prefix in sorted(chained_prefix_map.items(), key=lambda i: i[0].lower()):
-        file.write(f"@prefix {prefix}: <{uri_prefix}> .\n")
+    return sorted(chained_prefix_map.items(), key=lambda i: i[0].casefold())
+
+
+def _write_owl_rdf(
+    synonyms: list[Synonym],
+    file: TextIO,
+    *,
+    prefix_definitions: Annotated[
+        bool, Doc("Should the @prefix definitions be added at the top?")
+    ] = True,
+    class_definitions: Annotated[bool, Doc("Should the `a owl:Class` and label be added?")] = True,
+    metadata: Optional[str] = None,
+    prefix_map: Optional[Dict[str, str]] = None,
+) -> None:
+    dd = group_synonyms(synonyms)
+
+    if prefix_definitions:
+        for prefix, uri_prefix in _iter_prefix_map(dd, prefix_map=prefix_map):
+            file.write(f"@prefix {prefix}: <{uri_prefix}> .\n")
 
     if metadata:
         file.write(f"\n{metadata}\n")
@@ -194,9 +204,9 @@ def _write_owl_rdf(
         for synonym in synonyms:
             mains.append(f"{synonym.scope.curie} {synonym.text_for_turtle}")
 
-            axiom_parts = [
-                f"dcterms:contributor {synonym.contributor.curie}",
-            ]
+            axiom_parts = []
+            if synonym.contributor:
+                axiom_parts.append(f"dcterms:contributor {synonym.contributor.curie}")
             if synonym.date:
                 axiom_parts.append(f'dcterms:date "{synonym.date_str}"^^xsd:date')
             if synonym.source:
@@ -207,6 +217,10 @@ def _write_owl_rdf(
                 axiom_parts.append(f"oboInOwl:hasDbXref {rr.curie}")
             if synonym.comment:
                 axiom_parts.append(f'rdfs:comment "{_clean_str(synonym.comment)}"')
+
+            if not axiom_parts:
+                # if there's no additional context to add, then we don't need to make an axiom
+                continue
 
             axiom_parts_str = " ;\n".join(f"    {ax}" for ax in axiom_parts) + " ."
             axiom = f"""\
@@ -220,13 +234,16 @@ def _write_owl_rdf(
 """
             axiom_strs.append(axiom)
 
-        file.write(f"\n{reference.curie} a owl:Class ;\n")
-        try:
-            name = next(synonym.name for synonym in synonyms if synonym.name)
-        except StopIteration:
-            pass  # could not extract a name, no worries!
+        if class_definitions:
+            file.write(f"\n{reference.curie} a owl:Class ;\n")
+            try:
+                name = next(synonym.name for synonym in synonyms if synonym.name)
+            except StopIteration:
+                pass  # could not extract a name, no worries!
+            else:
+                mains.append(f'rdfs:label "{_clean_str(name)}"')
         else:
-            mains.append(f'rdfs:label "{_clean_str(name)}"')
+            file.write(f"\n{reference.curie} ")
 
         file.write(" ;\n".join(f"    {m}" for m in mains) + " .\n")
         if axiom_strs:

@@ -5,6 +5,7 @@ from .resources import (
     get_gilda_terms,
     get_negative_synonyms,
     get_positive_synonyms,
+    group_synonyms,
     load_unentities,
     parse_synonyms,
 )
@@ -16,4 +17,5 @@ __all__ = [
     "parse_synonyms",
     "get_gilda_terms",
     "load_unentities",
+    "group_synonyms",
 ]
