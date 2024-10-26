@@ -1,3 +1,4 @@
+@prefix BFO: <http://purl.obolibrary.org/obo/BFO_> .
 @prefix chebi: <http://purl.obolibrary.org/obo/CHEBI_> .
 @prefix cl: <http://purl.obolibrary.org/obo/CL_> .
 @prefix complexportal: <https://www.ebi.ac.uk/complexportal/complex/> .
@@ -17,6 +18,7 @@
 @prefix pubmed: <https://www.ncbi.nlm.nih.gov/pubmed/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sgd: <https://www.yeastgenome.org/locus/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix symp: <http://purl.obolibrary.org/obo/SYMP_> .
 
 <https://w3id.org/biopragmatics/resources/biosynonyms.ttl> a owl:Ontology ;
@@ -26,8 +28,9 @@
     rdfs:comment "Built by https://github.com/biopragmatics/biosynonyms"^^xsd:string .
 
 
-rdfs:label a owl:AnnotationProperty;
-    rdfs:label "label"^^xsd:string .
+rdfs:label   a owl:AnnotationProperty; rdfs:label "label"^^xsd:string .
+rdfs:seeAlso a owl:AnnotationProperty; rdfs:label "see also"^^xsd:string .
+rdfs:comment a owl:AnnotationProperty; rdfs:label "comment"^^xsd:string .
 
 oboInOwl:hasSynonym a owl:AnnotationProperty;
     rdfs:label "has synonym"^^xsd:string .
@@ -50,17 +53,14 @@ oboInOwl:hasSynonymType a owl:AnnotationProperty;
 oboInOwl:hasDbXref a owl:AnnotationProperty;
     rdfs:label "has database cross-reference"^^xsd:string .
 
-dcterms:contributor a owl:AnnotationProperty;
-    rdfs:label "contributor"^^xsd:string .
+skos:exactMatch a owl:AnnotationProperty; rdfs:label "exact match"^^xsd:string .
 
-dcterms:source a owl:AnnotationProperty;
-    rdfs:label "source"^^xsd:string .
+dcterms:contributor a owl:AnnotationProperty; rdfs:label "contributor"^^xsd:string .
+dcterms:source      a owl:AnnotationProperty; rdfs:label "source"^^xsd:string .
+dcterms:license     a owl:AnnotationProperty; rdfs:label "license"^^xsd:string .
+dcterms:description a owl:AnnotationProperty; rdfs:label "description"^^xsd:string .
 
-rdfs:seeAlso a owl:AnnotationProperty;
-    rdfs:label "see also"^^xsd:string .
-
-rdfs:comment a owl:AnnotationProperty;
-    rdfs:label "comment"^^xsd:string .
+BFO:0000051 a owl:ObjectProperty; rdfs:label "has part"^^xsd:string .
 
 NCBITaxon:9606 a owl:Class ;
     rdfs:label "Homo sapiens" .
@@ -115,118 +115,118 @@ OMO:0003012 a owl:AnnotationProperty;
 
 
 chebi:133726 a owl:Class ;
-    oboInOwl:hasSynonym "1,3-dimethylurate"@en ;
+    oboInOwl:hasExactSynonym "1,3-dimethylurate"@en ;
     rdfs:label "1,3-dimethylurate anion" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource chebi:133726 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "1,3-dimethylurate"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 mesh:C000590451 a owl:Class ;
-    oboInOwl:hasSynonym "abema"@en ;
+    oboInOwl:hasExactSynonym "abema"@en ;
     rdfs:label "abemaciclib" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource mesh:C000590451 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "abema"@en ;
     dcterms:contributor orcid:0000-0001-9439-5346 ;
     dcterms:source "biosynonyms" .
 ] .
 
 interpro:IPR024162 a owl:Class ;
-    oboInOwl:hasSynonym "adaptor protein cbl"@en ;
+    oboInOwl:hasExactSynonym "adaptor protein cbl"@en ;
     rdfs:label "Adaptor protein Cbl" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource interpro:IPR024162 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "adaptor protein cbl"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 chebi:48432 a owl:Class ;
-    oboInOwl:hasSynonym "Angiotensin-2"@en ;
+    oboInOwl:hasExactSynonym "Angiotensin-2"@en ;
     rdfs:label "angiotensin II" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource chebi:48432 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "Angiotensin-2"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 eccode:3.6.1.3 a owl:Class ;
-    oboInOwl:hasSynonym "ATPase"@en ;
+    oboInOwl:hasExactSynonym "ATPase"@en ;
     rdfs:label "adenosinetriphosphatase" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource eccode:3.6.1.3 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "ATPase"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 hgnc.genegroup:412 a owl:Class ;
-    oboInOwl:hasSynonym "ATPase"@en ;
+    oboInOwl:hasExactSynonym "ATPase"@en ;
     rdfs:label "ATPases" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource hgnc.genegroup:412 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "ATPase"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 go:0006915 a owl:Class ;
-    oboInOwl:hasSynonym "cell apoptosis"@en ;
+    oboInOwl:hasExactSynonym "cell apoptosis"@en ;
     rdfs:label "apoptotic process" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource go:0006915 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "cell apoptosis"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 symp:0020026 a owl:Class ;
-    oboInOwl:hasSynonym "chronic inflammation"@en ;
+    oboInOwl:hasExactSynonym "chronic inflammation"@en ;
     rdfs:label "chronic inflammation" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource symp:0020026 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "chronic inflammation"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 hgnc:5438 a owl:Class ;
-    oboInOwl:hasSynonym "IFN-\\u03b3"@en ;
-    oboInOwl:hasSynonym "IFN-\u03b3"@en ;
+    oboInOwl:hasExactSynonym "IFN-\\u03b3"@en ;
+    oboInOwl:hasExactSynonym "IFN-\u03b3"@en ;
     rdfs:label "IFNG" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource hgnc:5438 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "IFN-\\u03b3"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
@@ -234,21 +234,21 @@ hgnc:5438 a owl:Class ;
 [
     a owl:Axiom ;
     owl:annotatedSource hgnc:5438 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "IFN-\u03b3"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 hgnc:5992 a owl:Class ;
-    oboInOwl:hasSynonym "IL-1\\u03b2"@en ;
-    oboInOwl:hasSynonym "IL-1\u03b2"@en ;
+    oboInOwl:hasExactSynonym "IL-1\\u03b2"@en ;
+    oboInOwl:hasExactSynonym "IL-1\u03b2"@en ;
     rdfs:label "IL1B" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource hgnc:5992 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "IL-1\\u03b2"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
@@ -256,20 +256,20 @@ hgnc:5992 a owl:Class ;
 [
     a owl:Axiom ;
     owl:annotatedSource hgnc:5992 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "IL-1\u03b2"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 cl:0000738 a owl:Class ;
-    oboInOwl:hasSynonym "immune cells"@en ;
+    oboInOwl:hasExactSynonym "immune cells"@en ;
     rdfs:label "leukocyte" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource cl:0000738 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "immune cells"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" ;
@@ -277,13 +277,13 @@ cl:0000738 a owl:Class ;
 ] .
 
 go:0006954 a owl:Class ;
-    oboInOwl:hasSynonym "inflammatory responses"@en ;
+    oboInOwl:hasExactSynonym "inflammatory responses"@en ;
     rdfs:label "inflammatory response" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource go:0006954 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "inflammatory responses"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" ;
@@ -291,53 +291,53 @@ go:0006954 a owl:Class ;
 ] .
 
 hp:0002180 a owl:Class ;
-    oboInOwl:hasSynonym "neurodegeneration"@en ;
+    oboInOwl:hasExactSynonym "neurodegeneration"@en ;
     rdfs:label "Neurodegeneration" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource hp:0002180 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "neurodegeneration"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 hp:0033429 a owl:Class ;
-    oboInOwl:hasSynonym "neuroinflammation"@en ;
+    oboInOwl:hasExactSynonym "neuroinflammation"@en ;
     rdfs:label "Neuroinflammation" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource hp:0033429 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "neuroinflammation"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 complexportal:CPX-4141 a owl:Class ;
-    oboInOwl:hasSynonym "NLRP3 inflammasome"@en ;
+    oboInOwl:hasExactSynonym "NLRP3 inflammasome"@en ;
     rdfs:label "NLRP3 inflammasome" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource complexportal:CPX-4141 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "NLRP3 inflammasome"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 chebi:16618 a owl:Class ;
-    oboInOwl:hasSynonym "phosphatidylinositol (3,4,5) P3"@en ;
-    oboInOwl:hasSynonym "PI(3,4,5)P3"@en ;
+    oboInOwl:hasExactSynonym "phosphatidylinositol (3,4,5) P3"@en ;
+    oboInOwl:hasExactSynonym "PI(3,4,5)P3"@en ;
     rdfs:label "1-phosphatidyl-1D-myo-inositol 3,4,5-trisphosphate" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource chebi:16618 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "phosphatidylinositol (3,4,5) P3"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" ;
@@ -346,7 +346,7 @@ chebi:16618 a owl:Class ;
 [
     a owl:Axiom ;
     owl:annotatedSource chebi:16618 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "PI(3,4,5)P3"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" ;
@@ -357,14 +357,14 @@ chebi:16618 a owl:Class ;
 ] .
 
 hgnc:11892 a owl:Class ;
-    oboInOwl:hasSynonym "TNF-\\u03b1"@en ;
-    oboInOwl:hasSynonym "TNF-\u03b1"@en ;
+    oboInOwl:hasExactSynonym "TNF-\\u03b1"@en ;
+    oboInOwl:hasExactSynonym "TNF-\u03b1"@en ;
     rdfs:label "TNF" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource hgnc:11892 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "TNF-\\u03b1"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" ;
@@ -373,59 +373,59 @@ hgnc:11892 a owl:Class ;
 [
     a owl:Axiom ;
     owl:annotatedSource hgnc:11892 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "TNF-\u03b1"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 sgd:S000000019 a owl:Class ;
-    oboInOwl:hasSynonym "YAL021C"@en ;
+    oboInOwl:hasExactSynonym "YAL021C"@en ;
     rdfs:label "CCR4" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource sgd:S000000019 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "YAL021C"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 sgd:S000002319 a owl:Class ;
-    oboInOwl:hasSynonym "YDL160C"@en ;
+    oboInOwl:hasExactSynonym "YDL160C"@en ;
     rdfs:label "DHH1" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource sgd:S000002319 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "YDL160C"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 sgd:S000003090 a owl:Class ;
-    oboInOwl:hasSynonym "YGL122C"@en ;
+    oboInOwl:hasExactSynonym "YGL122C"@en ;
     rdfs:label "NAB2" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource sgd:S000003090 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "YGL122C"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .
 ] .
 
 sgd:S000005153 a owl:Class ;
-    oboInOwl:hasSynonym "YNL209W"@en ;
+    oboInOwl:hasExactSynonym "YNL209W"@en ;
     rdfs:label "SSB2" .
 
 [
     a owl:Axiom ;
     owl:annotatedSource sgd:S000005153 ;
-    owl:annotatedProperty oboInOwl:hasSynonym ;
+    owl:annotatedProperty oboInOwl:hasExactSynonym ;
     owl:annotatedTarget "YNL209W"@en ;
     dcterms:contributor orcid:0000-0003-4423-4370 ;
     dcterms:source "biosynonyms" .

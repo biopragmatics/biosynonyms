@@ -4,10 +4,9 @@ import gzip
 from collections import ChainMap, defaultdict
 from pathlib import Path
 from textwrap import dedent
-from typing import Dict, Mapping, Optional, TextIO, Union
+from typing import Dict, Optional, TextIO
 
 import bioregistry
-from curies import Reference
 from tqdm import tqdm
 
 from biosynonyms import Synonym, get_positive_synonyms

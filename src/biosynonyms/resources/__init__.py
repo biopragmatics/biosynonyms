@@ -38,7 +38,7 @@ __all__ = [
     "load_unentities",
     "write_unentities",
     # Utilities
-    "get_gilda_terms",
+    "iter_gilda_terms",
     "parse_synonyms",
 ]
 
@@ -144,18 +144,18 @@ class Synonym(BaseModel):
         """Parse a dictionary representing a row in a TSV."""
         reference = Reference.from_curie(row["curie"])
         name = (names or {}).get(reference) or row.get("name") or row["text"]
-        return cls(
+        data = dict(
             text=row["text"],
             reference=reference,
             name=name,
             scope=(
-                Reference.from_curie(row["scope"])
-                if "scope" in row
+                Reference.from_curie(scope_curie)
+                if (scope_curie := row.get("scope"))
                 else Reference.from_curie("oboInOwl:hasSynonym")
             ),
             type=_safe_parse_curie(row["type"]) if "type" in row else None,
             provenance=[
-                Reference.from_curie(provenance_curie)
+                Reference.from_curie(provenance_curie.strip())
                 for provenance_curie in (row.get("provenance") or "").split(",")
                 if provenance_curie.strip()
             ],
@@ -169,6 +169,28 @@ class Synonym(BaseModel):
             source=row.get("source") or None,
             date=row.get("date") or None,
         )
+        return cls.model_validate(data)
+
+    @classmethod
+    def from_gilda_term(cls, term: "gilda.Term") -> "Synonym":
+        """Get this synonym as a gilda term.
+
+        :param term: A Gilda term
+        :returns: A synonym object
+
+        .. warning::
+
+            Gilda's data model is less complete, so resulting synonym objects
+            will not have detailed curation provenance
+        """
+        data = dict(
+            text=term.text,
+            # TODO standardize?
+            reference=Reference(prefix=term.db, identifier=term.id),
+            name=term.entry_name,
+            source=term.source,
+        )
+        return cls.model_validate(data)
 
     def as_gilda_term(self) -> "gilda.Term":
         """Get this synonym as a gilda term."""
@@ -184,8 +206,9 @@ class Synonym(BaseModel):
             db=self.reference.prefix,
             id=self.reference.identifier,
             entry_name=self.name,
+            # TODO is Gilda's status vocabulary worth building an OMO map to/from?
             status="synonym",
-            source="biosynonyms",
+            source=self.source or "biosynonyms",
         )
 
 
@@ -226,13 +249,17 @@ def parse_synonyms(
     path = Path(path).resolve()
 
     if path.suffix == ".numbers":
-        return _parse_numbers(path)
+        return _parse_numbers(path, names=names)
 
     with path.open() as file:
         return _from_lines(file, delimiter=delimiter, names=names)
 
 
-def _parse_numbers(path: Union[str, Path]) -> List[Synonym]:
+def _parse_numbers(
+    path: Union[str, Path],
+    *,
+    names: Optional[Mapping[Reference, str]] = None,
+) -> List[Synonym]:
     # code example from https://pypi.org/project/numbers-parser
     import numbers_parser
 
@@ -240,7 +267,7 @@ def _parse_numbers(path: Union[str, Path]) -> List[Synonym]:
     sheets = doc.sheets
     tables = sheets[0].tables
     header, *rows = tables[0].rows(values_only=True)
-    return _from_dicts(dict(zip(header, row)) for row in rows)
+    return _from_dicts((dict(zip(header, row)) for row in rows), names=names)
 
 
 def _from_lines(
@@ -260,7 +287,7 @@ def _from_dicts(
     return [Synonym.from_row(record, names=names) for record in dicts if record]
 
 
-def get_gilda_terms() -> Iterable["gilda.Term"]:
+def iter_gilda_terms() -> Iterable["gilda.Term"]:
     """Get Gilda terms for all positive synonyms."""
     for synonym in parse_synonyms(POSITIVES_PATH):
         yield synonym.as_gilda_term()
