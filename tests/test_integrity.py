@@ -44,8 +44,20 @@ class TestIntegrity(unittest.TestCase):
 
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
-                self.assertEqual(7, len(row))
-                text, curie, _name, scope, synonym_type, references, orcid = row
+                self.assertEqual(11, len(row))
+                (
+                    text,
+                    curie,
+                    _name,
+                    scope,
+                    synonym_type,
+                    references,
+                    orcid,
+                    date,
+                    lang,
+                    comment,
+                    src,
+                ) = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
                 self.assertIn(scope, SYNONYM_SCOPES)
@@ -55,6 +67,8 @@ class TestIntegrity(unittest.TestCase):
                     reference = reference.strip()
                     self.assert_curie(reference)
                 self.assert_curie(f"orcid:{orcid}")
+                if date:
+                    self.assertRegex(date, "\\d{4}-\\d{2}-\\d{2}")
 
         # test sorted
         self.assertEqual(sorted(rows, key=sort_key), rows, msg="synonyms are not properly sorted")
@@ -71,7 +85,7 @@ class TestIntegrity(unittest.TestCase):
 
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
-                self.assertEquals(5, len(row))
+                self.assertEqual(5, len(row))
                 text, curie, _name, references, orcid = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
@@ -82,7 +96,9 @@ class TestIntegrity(unittest.TestCase):
 
         # test sorted
         self.assertEqual(
-            sorted(rows, key=sort_key), rows, msg="negative synonyms are not properly sorted"
+            sorted(rows, key=sort_key),
+            rows,
+            msg="negative synonyms are not properly sorted",
         )
 
         # test no duplicates
@@ -104,7 +120,7 @@ class TestIntegrity(unittest.TestCase):
 
     def test_gilda(self):
         """Test getting tilda terms."""
-        grounder = gilda.Grounder(list(biosynonyms.get_gilda_terms()))
+        grounder = gilda.Grounder(biosynonyms.get_gilda_terms())
         scored_matches = grounder.ground("YAL021C")
         self.assertEqual(1, len(scored_matches))
         self.assertEqual("sgd", scored_matches[0].term.db)

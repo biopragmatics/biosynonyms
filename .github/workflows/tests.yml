@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.8", "3.11" ]
+        python-version: [ "3.9", "3.12" ]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
-        run: pip install tox
+        run: pip install tox tox-uv
       - name: Check manifest
         run: tox run -e manifest
       - name: Check code quality with flake8
@@ -57,8 +57,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        python-version: [ "3.8", "3.11" ]
-        pydantic: [ "1", "2" ]
+        python-version: [ "3.9", "3.12" ]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -66,10 +65,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
-        run: pip install tox
+        run: pip install tox tox-uv
       - name: Test with pytest and generate coverage file
         run:
-          tox run -e py-pydantic${{ matrix.pydantic }}
+          tox run -e py
       - name: Upload coverage report to codecov
         uses: codecov/codecov-action@v1
         if: success()
