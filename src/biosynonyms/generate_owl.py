@@ -145,7 +145,7 @@ def _write_owl_rdf(
     synonyms: list[Synonym],
     file: TextIO,
     *,
-    metadata: str | None = None,
+    metadata: Optional[str] = None,
     prefix_map: Optional[Dict[str, str]] = None,
 ) -> None:
     dd = defaultdict(list)
