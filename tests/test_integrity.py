@@ -117,7 +117,7 @@ class TestIntegrity(unittest.TestCase):
 
     def test_gilda(self):
         """Test getting tilda terms."""
-        grounder = gilda.Grounder(biosynonyms.iter_gilda_terms())
+        grounder = gilda.Grounder(biosynonyms.get_gilda_terms())
         scored_matches = grounder.ground("YAL021C")
         self.assertEqual(1, len(scored_matches))
         self.assertEqual("sgd", scored_matches[0].term.db)

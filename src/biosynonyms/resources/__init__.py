@@ -38,7 +38,7 @@ __all__ = [
     "load_unentities",
     "write_unentities",
     # Utilities
-    "iter_gilda_terms",
+    "get_gilda_terms",
     "parse_synonyms",
 ]
 
@@ -287,7 +287,7 @@ def _from_dicts(
     return [Synonym.from_row(record, names=names) for record in dicts if record]
 
 
-def iter_gilda_terms() -> Iterable["gilda.Term"]:
+def get_gilda_terms() -> Iterable["gilda.Term"]:
     """Get Gilda terms for all positive synonyms."""
     for synonym in parse_synonyms(POSITIVES_PATH):
         yield synonym.as_gilda_term()

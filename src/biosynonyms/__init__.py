@@ -2,9 +2,9 @@
 
 from .resources import (
     Synonym,
+    get_gilda_terms,
     get_negative_synonyms,
     get_positive_synonyms,
-    iter_gilda_terms,
     load_unentities,
     parse_synonyms,
 )
@@ -14,6 +14,6 @@ __all__ = [
     "get_positive_synonyms",
     "get_negative_synonyms",
     "parse_synonyms",
-    "iter_gilda_terms",
+    "get_gilda_terms",
     "load_unentities",
 ]
