@@ -42,6 +42,7 @@ __all__ = [
     # Utilities
     "get_gilda_terms",
     "parse_synonyms",
+    "group_synonyms",
 ]
 
 HERE = Path(__file__).parent.resolve()
@@ -125,6 +126,15 @@ class Synonym(BaseModel):
         None, description="The name of the resource where the synonym was curated"
     )
     date: Optional[datetime.datetime] = Field(None, description="The date of initial curation")
+
+    def get_all_references(self) -> Set[Reference]:
+        """Get all references made by this object."""
+        rv: Set[Reference] = {self.reference, self.scope, *self.provenance}
+        if self.type:
+            rv.add(self.type)
+        if self.contributor:
+            rv.add(self.contributor)
+        return rv
 
     @property
     def curie(self) -> str:

@@ -4,7 +4,7 @@ import gzip
 from collections import ChainMap
 from pathlib import Path
 from textwrap import dedent
-from typing import Annotated, Any, Dict, List, Optional, TextIO, Tuple
+from typing import Annotated, Any, Dict, List, Optional, Set, TextIO, Tuple
 
 import bioregistry
 from curies import Reference
@@ -142,23 +142,22 @@ DEFAULT_PREFIXES: Dict[str, str] = dict(
 )
 
 
+def _get_prefixes(dd: dict[Reference, List[Synonym]]) -> Set[str]:
+    return {
+        reference.prefix
+        for synonyms in dd.values()
+        for synonym in synonyms
+        for reference in synonym.get_all_references()
+    }
+
+
 def _iter_prefix_map(
     dd: dict[Reference, List[Synonym]],
     *,
     prefix_map: Optional[Dict[str, str]] = None,
 ) -> List[Tuple[str, str]]:
-    # Get all the prefixes used for references
-    extra_prefixes: set[str] = {reference.prefix for reference in dd}
-    # Add all the prefixes appearing in provenance
-    extra_prefixes.update(
-        reference.prefix
-        for synonyms in dd.values()
-        for synonym in synonyms
-        for reference in synonym.provenance
-    )
-
     looked_up_prefix_map: Dict[str, str] = {}
-    for prefix in extra_prefixes:
+    for prefix in _get_prefixes(dd):
         if prefix_map and prefix in prefix_map:
             pass  # given explicitly, no need to look up in bioregistry
         elif prefix not in looked_up_prefix_map:
