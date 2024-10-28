@@ -13,12 +13,12 @@ from .resources import (
 
 def _sort(path: Path) -> None:
     with path.open() as file:
-        header, *rows = [line.strip().split("\t") for line in file]
+        header, *rows = (line.strip().split("\t") for line in file)
     rows = sorted(rows, key=sort_key)
     with path.open("w") as file:
-        print(*header, sep="\t", file=file)  # noqa:T201
+        print(*header, sep="\t", file=file)
         for row in rows:
-            print(*row, sep="\t", file=file)  # noqa:T201
+            print(*row, sep="\t", file=file)
 
 
 def _main() -> None:

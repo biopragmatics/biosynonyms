@@ -4,7 +4,7 @@ import gzip
 from collections import ChainMap
 from pathlib import Path
 from textwrap import dedent
-from typing import Annotated, Any, Dict, List, Optional, Set, TextIO, Tuple
+from typing import Annotated, Any, Optional, TextIO
 
 import bioregistry
 from curies import Reference
@@ -128,21 +128,21 @@ def write_owl_rdf_gz(**kwargs: Any) -> None:
         _write_owl_rdf(get_positive_synonyms(), file, metadata=METADATA, **kwargs)
 
 
-DEFAULT_PREFIXES: Dict[str, str] = dict(
-    # rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    rdfs="http://www.w3.org/2000/01/rdf-schema#",
-    dcterms="http://purl.org/dc/terms/",
-    owl="http://www.w3.org/2002/07/owl#",
-    oboInOwl="http://www.geneontology.org/formats/oboInOwl#",
-    skos="http://www.w3.org/2004/02/skos/core#",
-    orcid="https://orcid.org/",
-    OMO="http://purl.obolibrary.org/obo/OMO_",
-    NCBITaxon="http://purl.obolibrary.org/obo/NCBITaxon_",
-    BFO="http://purl.obolibrary.org/obo/BFO_",
-)
+DEFAULT_PREFIXES: dict[str, str] = {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "orcid": "https://orcid.org/",
+    "OMO": "http://purl.obolibrary.org/obo/OMO_",
+    "NCBITaxon": "http://purl.obolibrary.org/obo/NCBITaxon_",
+    "BFO": "http://purl.obolibrary.org/obo/BFO_",
+}
 
 
-def _get_prefixes(dd: dict[Reference, List[Synonym]]) -> Set[str]:
+def _get_prefixes(dd: dict[Reference, list[Synonym]]) -> set[str]:
     return {
         reference.prefix
         for synonyms in dd.values()
@@ -152,7 +152,7 @@ def _get_prefixes(dd: dict[Reference, List[Synonym]]) -> Set[str]:
 
 
 def write_prefix_map(
-    prefixes: Set[str], file: TextIO, *, prefix_map: Optional[Dict[str, str]] = None
+    prefixes: set[str], file: TextIO, *, prefix_map: Optional[dict[str, str]] = None
 ) -> None:
     """Write the prefix map to the top of a turtle file."""
     for prefix, uri_prefix in iter_prefix_map(prefixes, prefix_map=prefix_map):
@@ -160,12 +160,12 @@ def write_prefix_map(
 
 
 def iter_prefix_map(
-    prefixes: Set[str],
+    prefixes: set[str],
     *,
-    prefix_map: Optional[Dict[str, str]] = None,
-) -> List[Tuple[str, str]]:
+    prefix_map: Optional[dict[str, str]] = None,
+) -> list[tuple[str, str]]:
     """Generate a prefix map."""
-    looked_up_prefix_map: Dict[str, str] = {}
+    looked_up_prefix_map: dict[str, str] = {}
     for prefix in prefixes:
         if prefix_map and prefix in prefix_map:
             pass  # given explicitly, no need to look up in bioregistry
@@ -176,7 +176,8 @@ def iter_prefix_map(
             uri_prefix = resource.rdf_uri_format or resource.get_uri_prefix()
             if uri_prefix is None:
                 raise ValueError(
-                    f"Prefix has no URI expansion in Bioregistry: {prefix} ({bioregistry.get_name(prefix)})"
+                    f"Prefix has no URI expansion in Bioregistry: "
+                    f"{prefix} ({bioregistry.get_name(prefix)})"
                 )
             looked_up_prefix_map[prefix] = uri_prefix
 
@@ -217,7 +218,7 @@ def get_axiom_str(reference: Reference, synonym: Synonym) -> Optional[str]:
     return axiom
 
 
-def _write_owl_rdf(
+def _write_owl_rdf(  # noqa:C901
     synonyms: list[Synonym],
     file: TextIO,
     *,
@@ -226,7 +227,7 @@ def _write_owl_rdf(
     ] = True,
     class_definitions: Annotated[bool, Doc("Should the `a owl:Class` and label be added?")] = True,
     metadata: Optional[str] = None,
-    prefix_map: Optional[Dict[str, str]] = None,
+    prefix_map: Optional[dict[str, str]] = None,
 ) -> None:
     dd = group_synonyms(synonyms)
 
@@ -239,8 +240,8 @@ def _write_owl_rdf(
     file.write(f"\n{PREAMBLE}\n")
 
     for reference, synonyms in dd.items():
-        mains: List[str] = []
-        axiom_strs: List[str] = []
+        mains: list[str] = []
+        axiom_strs: list[str] = []
         for synonym in synonyms:
             mains.append(f"{synonym.scope.curie} {synonym.text_for_turtle}")
             if axiom_str := get_axiom_str(reference, synonym):

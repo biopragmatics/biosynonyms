@@ -5,19 +5,11 @@ from __future__ import annotations
 import csv
 import datetime
 from collections import defaultdict
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
     cast,
 )
 
@@ -59,33 +51,33 @@ SYNONYM_SCOPES = {
 }
 
 
-def sort_key(row: Sequence[str]) -> Tuple[str, str, str, str]:
+def sort_key(row: Sequence[str]) -> tuple[str, str, str, str]:
     """Return a key for sorting a row."""
     return row[0].casefold(), row[0], row[1].casefold(), row[1]
 
 
-def load_unentities() -> Set[str]:
+def load_unentities() -> set[str]:
     """Load all strings that are known not to be named entities."""
     return {line[0] for line in _load_unentities()}
 
 
-def _load_unentities() -> Iterable[Tuple[str, str]]:
+def _load_unentities() -> Iterable[tuple[str, str]]:
     with UNENTITIES_PATH.open() as file:
         next(file)  # throw away header
         for line in file:
-            yield cast(Tuple[str, str], line.strip().split("\t"))
+            yield cast(tuple[str, str], line.strip().split("\t"))
 
 
 def _unentities_key(row: Sequence[str]) -> str:
     return row[0].casefold()
 
 
-def write_unentities(rows: Iterable[Tuple[str, str]]) -> None:
+def write_unentities(rows: Iterable[tuple[str, str]]) -> None:
     """Write all strings that are known not to be named entities."""
     with UNENTITIES_PATH.open("w") as file:
-        print("text", "curator_orcid", sep="\t", file=file)  # noqa:T201
+        print("text", "curator_orcid", sep="\t", file=file)
         for row in sorted(rows, key=_unentities_key):
-            print(*row, sep="\t", file=file)  # noqa:T201
+            print(*row, sep="\t", file=file)
 
 
 def _clean_str(s: str) -> str:
@@ -96,40 +88,43 @@ class Synonym(BaseModel):
     """A data model for synonyms."""
 
     text: str
-    language: Optional[LanguageAlpha2] = Field(
+    language: LanguageAlpha2 | None = Field(
         None,
-        description="The language of the synonym. If not given, typically assumed to be american english.",
+        description="The language of the synonym. If not given, typically "
+        "assumed to be american english.",
     )
     reference: Reference
     name: str
     scope: Reference = Field(
         default=Reference.from_curie("oboInOwl:hasSynonym"),
-        description="The predicate that connects the term (as subject) to the textual synonym (as object)",
+        description="The predicate that connects the term (as subject) "
+        "to the textual synonym (as object)",
     )
-    type: Optional[Reference] = Field(
+    type: Reference | None = Field(
         default=None,
         title="Synonym type",
         description="See the OBO Metadata Ontology for valid values",
     )
 
-    provenance: List[Reference] = Field(
+    provenance: list[Reference] = Field(
         default_factory=list,
-        description="A list of articles (e.g., from PubMed, PMC, arXiv) where this synonym appears",
+        description="A list of articles (e.g., from PubMed, PMC, arXiv) "
+        "where this synonym appears",
     )
-    contributor: Optional[Reference] = Field(
-        None, description="The contributor, usually given as a reference to ORCID"
+    contributor: Reference | None = Field(
+        None, description="The contributor, usually given as a " "reference to ORCID"
     )
-    comment: Optional[str] = Field(
+    comment: str | None = Field(
         None, description="An optional comment on the synonym curation or status"
     )
-    source: Optional[str] = Field(
+    source: str | None = Field(
         None, description="The name of the resource where the synonym was curated"
     )
-    date: Optional[datetime.datetime] = Field(None, description="The date of initial curation")
+    date: datetime.datetime | None = Field(None, description="The date of initial curation")
 
-    def get_all_references(self) -> Set[Reference]:
+    def get_all_references(self) -> set[Reference]:
         """Get all references made by this object."""
-        rv: Set[Reference] = {self.reference, self.scope, *self.provenance}
+        rv: set[Reference] = {self.reference, self.scope, *self.provenance}
         if self.type:
             rv.add(self.type)
         if self.contributor:
@@ -158,30 +153,31 @@ class Synonym(BaseModel):
 
     @classmethod
     def from_row(
-        cls, row: Dict[str, Any], *, names: Optional[Mapping[Reference, str]] = None
-    ) -> "Synonym":
+        cls, row: dict[str, Any], *, names: Mapping[Reference, str] | None = None
+    ) -> Synonym:
         """Parse a dictionary representing a row in a TSV."""
         reference = Reference.from_curie(row["curie"])
         name = (names or {}).get(reference) or row.get("name") or row["text"]
-        data = dict(
-            text=row["text"],
-            reference=reference,
-            name=name,
-            scope=(
+        data = {
+            "text": row["text"],
+            "reference": reference,
+            "name": name,
+            "scope": (
                 Reference.from_curie(scope_curie.strip())
                 if (scope_curie := row.get("scope"))
                 else Reference.from_curie("oboInOwl:hasSynonym")
             ),
-            type=_safe_parse_curie(row["type"]) if "type" in row else None,
-            provenance=[
+            "type": _safe_parse_curie(row["type"]) if "type" in row else None,
+            "provenance": [
                 Reference.from_curie(provenance_curie.strip())
                 for provenance_curie in (row.get("provenance") or "").split(",")
                 if provenance_curie.strip()
             ],
-            language=row.get("language") or None,  # get("X") or None protects against empty strings
-            comment=row.get("comment") or None,
-            source=row.get("source") or None,
-        )
+            "language": row.get("language")
+            or None,  # get("X") or None protects against empty strings
+            "comment": row.get("comment") or None,
+            "source": row.get("source") or None,
+        }
         if contributor := (row.get("contributor") or "").strip():
             data["contributor"] = Reference(prefix="orcid", identifier=contributor)
         if date := (row.get("date") or "").strip():
@@ -190,7 +186,7 @@ class Synonym(BaseModel):
         return cls.model_validate(data)
 
     @classmethod
-    def from_gilda_term(cls, term: "gilda.Term") -> "Synonym":
+    def from_gilda_term(cls, term: gilda.Term) -> Synonym:
         """Get this synonym as a gilda term.
 
         :param term: A Gilda term
@@ -201,16 +197,16 @@ class Synonym(BaseModel):
             Gilda's data model is less complete, so resulting synonym objects
             will not have detailed curation provenance
         """
-        data = dict(
-            text=term.text,
+        data = {
+            "text": term.text,
             # TODO standardize?
-            reference=Reference(prefix=term.db, identifier=term.id),
-            name=term.entry_name,
-            source=term.source,
-        )
+            "reference": Reference(prefix=term.db, identifier=term.id),
+            "name": term.entry_name,
+            "source": term.source,
+        }
         return cls.model_validate(data)
 
-    def as_gilda_term(self) -> "gilda.Term":
+    def as_gilda_term(self) -> gilda.Term:
         """Get this synonym as a gilda term."""
         if not self.name:
             raise ValueError("can't make a Gilda term without a label")
@@ -231,7 +227,7 @@ def _gilda_term(
     name: str | None = None,
     status: str,
     source: str | None,
-) -> "gilda.Term":
+) -> gilda.Term:
     import gilda
     from gilda.process import normalize
 
@@ -246,33 +242,34 @@ def _gilda_term(
     )
 
 
-def _safe_parse_curie(x) -> Optional[Reference]:  # type:ignore
+def _safe_parse_curie(x) -> Reference | None:  # type:ignore
     if pd.isna(x) or not x.strip():
         return None
     return Reference.from_curie(x.strip())
 
 
-def get_positive_synonyms() -> List[Synonym]:
+def get_positive_synonyms() -> list[Synonym]:
     """Get positive synonyms curated in Biosynonyms."""
     return parse_synonyms(POSITIVES_PATH)
 
 
-def get_negative_synonyms() -> List[Synonym]:
+def get_negative_synonyms() -> list[Synonym]:
     """Get negative synonyms curated in Biosynonyms."""
     return parse_synonyms(NEGATIVES_PATH)
 
 
 def parse_synonyms(
-    path: Union[str, Path],
+    path: str | Path,
     *,
-    delimiter: Optional[str] = None,
-    names: Optional[Mapping[Reference, str]] = None,
-) -> List[Synonym]:
+    delimiter: str | None = None,
+    names: Mapping[Reference, str] | None = None,
+) -> list[Synonym]:
     """Load synonyms from a file.
 
     :param path: A local file path or URL for a biosynonyms-flavored CSV/TSV file
     :param delimiter: The delimiter for the CSV/TSV file. Defaults to tab
-    :param names: A pre-parsed dictionary from references (i.e., prefix-luid pairs) to default labels
+    :param names: A pre-parsed dictionary from references
+        (i.e., prefix-luid pairs) to default labels
     :returns: A list of synonym objects parsed from the table
     """
     if isinstance(path, str) and any(path.startswith(schema) for schema in ("https://", "http://")):
@@ -290,10 +287,10 @@ def parse_synonyms(
 
 
 def _parse_numbers(
-    path: Union[str, Path],
+    path: str | Path,
     *,
-    names: Optional[Mapping[Reference, str]] = None,
-) -> List[Synonym]:
+    names: Mapping[Reference, str] | None = None,
+) -> list[Synonym]:
     # code example from https://pypi.org/project/numbers-parser
     import numbers_parser
 
@@ -307,29 +304,29 @@ def _parse_numbers(
 def _from_lines(
     lines: Iterable[str],
     *,
-    delimiter: Optional[str] = None,
-    names: Optional[Mapping[Reference, str]] = None,
-) -> List[Synonym]:
+    delimiter: str | None = None,
+    names: Mapping[Reference, str] | None = None,
+) -> list[Synonym]:
     return _from_dicts(csv.DictReader(lines, delimiter=delimiter or "\t"), names=names)
 
 
 def _from_dicts(
-    dicts: Iterable[Dict[str, Any]],
+    dicts: Iterable[dict[str, Any]],
     *,
-    names: Optional[Mapping[Reference, str]] = None,
-) -> List[Synonym]:
+    names: Mapping[Reference, str] | None = None,
+) -> list[Synonym]:
     return [Synonym.from_row(record, names=names) for record in dicts if record]
 
 
-def get_gilda_terms() -> Iterable["gilda.Term"]:
+def get_gilda_terms() -> Iterable[gilda.Term]:
     """Get Gilda terms for all positive synonyms."""
     for synonym in parse_synonyms(POSITIVES_PATH):
         yield synonym.as_gilda_term()
 
 
-def group_synonyms(synonyms: Iterable[Synonym]) -> dict[Reference, List[Synonym]]:
+def group_synonyms(synonyms: Iterable[Synonym]) -> dict[Reference, list[Synonym]]:
     """Aggregate synonyms by reference."""
-    dd: defaultdict[Reference, List[Synonym]] = defaultdict(list)
+    dd: defaultdict[Reference, list[Synonym]] = defaultdict(list)
     for synonym in tqdm(synonyms, unit="synonym", unit_scale=True, leave=False):
         dd[synonym.reference].append(synonym)
     return dict(dd)

@@ -1,0 +1,3 @@
+Usage
+=====
+.. automodapi:: biosynonyms

@@ -5,7 +5,8 @@ Does the following:
 - [ ] Automate acquisition of INDRA DB processed statements
 - [x] Convert processed (including ungrounded statements) into triples
 - [ ] Calculate graph embedding
-- [ ] Calculate nearest neighbors for top K entities with text to all entities with grounding
+- [ ] Calculate nearest neighbors for top K entities
+      with text to all entities with grounding
 
 Run with ``python -m biosynonyms.predict``
 """
@@ -15,10 +16,11 @@ import itertools as itt
 import json
 import logging
 from collections import Counter
+from collections.abc import Iterable
 from functools import partial
 from itertools import permutations
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Set, Tuple, cast
+from typing import TYPE_CHECKING, cast
 
 import bioregistry
 import click
@@ -37,12 +39,12 @@ from indra.statements import (
 )
 from more_click import force_option
 from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 
 from biosynonyms.resources import load_unentities
 
 if TYPE_CHECKING:
     import ensmallen
-
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +56,8 @@ EMBEDDINGS_PATH = MODULE.join(name="biosynonyms_embeddings.parquet")
 PLOT_PATH = MODULE.join(name="plot.png")
 TEXT_PREFIX = "text"
 
-Row = Tuple[ReferenceTuple, ReferenceTuple]
-Rows = List[Row]
+Row = tuple[ReferenceTuple, ReferenceTuple]
+Rows = list[Row]
 
 
 def ensure_procesed_statements() -> Path:
@@ -96,8 +98,8 @@ def get_agent_curie_tuple(agent: Agent, *, grounder: gilda.Grounder) -> Referenc
     return _norm_strict(scored_match.term.db, scored_match.term.id)
 
 
-@click.command()  # type:ignore
-@click.option("--size", type=int, default=32)  # type:ignore
+@click.command()
+@click.option("--size", type=int, default=32)
 @force_option  # type:ignore
 def main(size: int, force: bool) -> None:
     """Generate synonym predictions."""
@@ -117,15 +119,17 @@ def main(size: int, force: bool) -> None:
         click.echo(f"Writing Parquet to {EMBEDDINGS_PATH}")
         df.to_parquet(EMBEDDINGS_PATH)
         # TODO output index of all synonyms
-        # TODO calculate closest neighbors for synonyms (that aren't already in predictions)
+        # TODO calculate closest neighbors for synonyms
+        #  (that aren't already in predictions)
 
-        # from embiggen import GraphVisualizer
-        #
-        # visualizer = GraphVisualizer(graph)
-        # fig, axes = visualizer.fit_and_plot_all(embedding)
-        # click.echo(f"Outputting plots to {PLOT_PATH}")
-        # plt.savefig(PLOT_PATH, dpi=300)
-        # plt.close(fig)
+        import matplotlib.pyplot as plt
+        from embiggen import GraphVisualizer
+
+        visualizer = GraphVisualizer(graph)
+        fig, axes = visualizer.fit_and_plot_all(embedding)
+        click.echo(f"Outputting plots to {PLOT_PATH}")
+        plt.savefig(PLOT_PATH, dpi=300)
+        plt.close(fig)
 
 
 def get_grounder() -> gilda.Grounder:
@@ -134,7 +138,7 @@ def get_grounder() -> gilda.Grounder:
     raise NotImplementedError
 
 
-def get_graph(force: bool = False) -> "ensmallen.Graph":
+def get_graph(force: bool = False, *, multiprocessing: bool = False) -> "ensmallen.Graph":
     """Get a the undirected INDRA graph."""
     if not PAIRS_PATH.exists() or force:
         click.echo("loading non-entities")
@@ -149,26 +153,29 @@ def get_graph(force: bool = False) -> "ensmallen.Graph":
 
         click.echo("Ensuring INDRA statements from S3")
         input_path = ensure_procesed_statements()
-        tqdm_kwargs = dict(
-            desc="loading INDRA db",
-            unit="statement",
-            unit_scale=True,
-            total=65_102_088,
-        )
+        tqdm_kwargs = {
+            "desc": "loading INDRA db",
+            "unit": "statement",
+            "unit_scale": True,
+            "total": 65_102_088,
+        }
         click.echo("Reading INDRA statements")
         with gzip.open(input_path, "rt") as file:
             click.echo(f"Opened {file.name}")
-            rows: Set[Row] = set(
-                itt.chain.from_iterable(func(line) for line in tqdm(file, **tqdm_kwargs))
-            )
-            # groups = process_map(
-            #     func,
-            #     file,
-            #     **tqdm_kwargs,
-            #     max_workers=4,
-            #     chunksize=300_000,
-            # )
-            # rows: Set[Row] = set(itt.chain.from_iterable(groups))
+
+            if multiprocessing:
+                groups = process_map(
+                    func,
+                    file,
+                    **tqdm_kwargs,
+                    max_workers=4,
+                    chunksize=300_000,
+                )
+                rows: set[Row] = set(itt.chain.from_iterable(groups))
+            else:
+                rows = set(
+                    itt.chain.from_iterable(func(line) for line in tqdm(file, **tqdm_kwargs))
+                )
 
         sorted_rows = sorted(rows)
 
@@ -182,7 +189,7 @@ def get_graph(force: bool = False) -> "ensmallen.Graph":
         # this can't be gzipped or else GRAPE doesn't work
         with PAIRS_PATH.open("w") as file:
             for source, target in tqdm(sorted_rows, desc="writing", unit_scale=True):
-                print(  # noqa:T201
+                print(
                     source.curie,
                     target.curie,
                     sep="\t",
@@ -213,7 +220,7 @@ def _iter_names_from_rows(sorted_rows: Iterable[Row]) -> Iterable[str]:
             yield target.identifier
 
 
-def _line_to_rows(line: str, unentities: Set[str], grounder: gilda.Grounder) -> Rows:
+def _line_to_rows(line: str, unentities: set[str], grounder: gilda.Grounder) -> Rows:
     _assembled_hash, stmt_json_str = line.split("\t", 1)
     # why won't it strip the extra?!?!
     stmt_json_str = stmt_json_str.replace('""', '"').strip('"')[:-2]
@@ -221,10 +228,10 @@ def _line_to_rows(line: str, unentities: Set[str], grounder: gilda.Grounder) -> 
     return _rows_from_stmt(stmt, unentities=unentities, grounder=grounder)
 
 
-def _rows_from_stmt(
+def _rows_from_stmt(  # noqa:C901
     stmt: Statement,
     *,
-    unentities: Set[str],
+    unentities: set[str],
     grounder: gilda.Grounder,
     complex_members: int = 3,
 ) -> Rows:
@@ -284,13 +291,13 @@ def _rows_from_stmt(
         if _is_unentity(source) or _is_unentity(target):
             continue
 
-        # stmt_type = type(stmt).__name__
         row = (source, target)
         rows.append(row)
     return rows
 
 
-# TODO open up pairs file and clean it to remove any row where either the source or target are in the unentities list
+# TODO open up pairs file and clean it to remove any row where
+#  either the source or target are in the unentities list
 
 
 if __name__ == "__main__":
