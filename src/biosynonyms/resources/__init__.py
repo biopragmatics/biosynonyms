@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import datetime
+from collections import defaultdict
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -25,6 +26,7 @@ import requests
 from curies import Reference
 from pydantic import BaseModel, Field
 from pydantic_extra_types.language_code import LanguageAlpha2
+from tqdm import tqdm
 
 if TYPE_CHECKING:
     import gilda
@@ -40,6 +42,7 @@ __all__ = [
     # Utilities
     "get_gilda_terms",
     "parse_synonyms",
+    "group_synonyms",
 ]
 
 HERE = Path(__file__).parent.resolve()
@@ -124,6 +127,15 @@ class Synonym(BaseModel):
     )
     date: Optional[datetime.datetime] = Field(None, description="The date of initial curation")
 
+    def get_all_references(self) -> Set[Reference]:
+        """Get all references made by this object."""
+        rv: Set[Reference] = {self.reference, self.scope, *self.provenance}
+        if self.type:
+            rv.add(self.type)
+        if self.contributor:
+            rv.add(self.contributor)
+        return rv
+
     @property
     def curie(self) -> str:
         """Get the reference's CURIE."""
@@ -202,20 +214,36 @@ class Synonym(BaseModel):
         """Get this synonym as a gilda term."""
         if not self.name:
             raise ValueError("can't make a Gilda term without a label")
-
-        import gilda
-        from gilda.process import normalize
-
-        return gilda.Term(
-            normalize(self.text),
+        return _gilda_term(
             text=self.text,
-            db=self.reference.prefix,
-            id=self.reference.identifier,
-            entry_name=self.name,
+            reference=self.reference,
+            name=self.name,
             # TODO is Gilda's status vocabulary worth building an OMO map to/from?
             status="synonym",
             source=self.source or "biosynonyms",
         )
+
+
+def _gilda_term(
+    *,
+    text: str,
+    reference: Reference,
+    name: str | None = None,
+    status: str,
+    source: str | None,
+) -> "gilda.Term":
+    import gilda
+    from gilda.process import normalize
+
+    return gilda.Term(
+        normalize(text),
+        text=text,
+        db=reference.prefix,
+        id=reference.identifier,
+        entry_name=name or text,
+        status=status,
+        source=source,
+    )
 
 
 def _safe_parse_curie(x) -> Optional[Reference]:  # type:ignore
@@ -297,3 +325,11 @@ def get_gilda_terms() -> Iterable["gilda.Term"]:
     """Get Gilda terms for all positive synonyms."""
     for synonym in parse_synonyms(POSITIVES_PATH):
         yield synonym.as_gilda_term()
+
+
+def group_synonyms(synonyms: Iterable[Synonym]) -> dict[Reference, List[Synonym]]:
+    """Aggregate synonyms by reference."""
+    dd: defaultdict[Reference, List[Synonym]] = defaultdict(list)
+    for synonym in tqdm(synonyms, unit="synonym", unit_scale=True, leave=False):
+        dd[synonym.reference].append(synonym)
+    return dict(dd)
