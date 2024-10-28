@@ -239,12 +239,12 @@ def _write_owl_rdf(
     file.write(f"\n{PREAMBLE}\n")
 
     for reference, synonyms in dd.items():
-        mains = []
-        axiom_strs = []
+        mains: List[str] = []
+        axiom_strs: List[str] = []
         for synonym in synonyms:
             mains.append(f"{synonym.scope.curie} {synonym.text_for_turtle}")
-            axiom_str = get_axiom_str(reference, synonym)
-            axiom_strs.append(axiom_str)
+            if axiom_str := get_axiom_str(reference, synonym):
+                axiom_strs.append(axiom_str)
 
         if class_definitions:
             file.write(f"\n{reference.curie} a owl:Class ;\n")
