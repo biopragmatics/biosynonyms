@@ -214,20 +214,36 @@ class Synonym(BaseModel):
         """Get this synonym as a gilda term."""
         if not self.name:
             raise ValueError("can't make a Gilda term without a label")
-
-        import gilda
-        from gilda.process import normalize
-
-        return gilda.Term(
-            normalize(self.text),
+        return _gilda_term(
             text=self.text,
-            db=self.reference.prefix,
-            id=self.reference.identifier,
-            entry_name=self.name,
+            reference=self.reference,
+            name=self.name,
             # TODO is Gilda's status vocabulary worth building an OMO map to/from?
             status="synonym",
             source=self.source or "biosynonyms",
         )
+
+
+def _gilda_term(
+    *,
+    text: str,
+    reference: Reference,
+    name: str | None = None,
+    status: str,
+    source: str | None,
+) -> "gilda.Term":
+    import gilda
+    from gilda.process import normalize
+
+    return gilda.Term(
+        normalize(text),
+        text=text,
+        db=reference.prefix,
+        id=reference.identifier,
+        entry_name=name or text,
+        status=status,
+        source=source,
+    )
 
 
 def _safe_parse_curie(x) -> Optional[Reference]:  # type:ignore
