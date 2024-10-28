@@ -298,7 +298,7 @@ def _parse_numbers(
     sheets = doc.sheets
     tables = sheets[0].tables
     header, *rows = tables[0].rows(values_only=True)
-    return _from_dicts((dict(zip(header, row)) for row in rows), names=names)
+    return _from_dicts((dict(zip(header, row, strict=False)) for row in rows), names=names)
 
 
 def _from_lines(

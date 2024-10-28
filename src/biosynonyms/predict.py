@@ -240,7 +240,7 @@ def _rows_from_stmt(  # noqa:C901
         # Exclude statements with less than 2 agents
         return []
 
-    if isinstance(stmt, (Influence, Association)):
+    if isinstance(stmt, Influence | Association):
         # Special handling for Influences and Associations
         stmt_pol = stmt.overall_polarity()
         if stmt_pol == 1:

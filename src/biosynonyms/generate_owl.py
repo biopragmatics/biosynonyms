@@ -4,7 +4,7 @@ import gzip
 from collections import ChainMap
 from pathlib import Path
 from textwrap import dedent
-from typing import Annotated, Any, Optional, TextIO
+from typing import Annotated, Any, TextIO
 
 import bioregistry
 from curies import Reference
@@ -152,7 +152,7 @@ def _get_prefixes(dd: dict[Reference, list[Synonym]]) -> set[str]:
 
 
 def write_prefix_map(
-    prefixes: set[str], file: TextIO, *, prefix_map: Optional[dict[str, str]] = None
+    prefixes: set[str], file: TextIO, *, prefix_map: dict[str, str] | None = None
 ) -> None:
     """Write the prefix map to the top of a turtle file."""
     for prefix, uri_prefix in iter_prefix_map(prefixes, prefix_map=prefix_map):
@@ -162,7 +162,7 @@ def write_prefix_map(
 def iter_prefix_map(
     prefixes: set[str],
     *,
-    prefix_map: Optional[dict[str, str]] = None,
+    prefix_map: dict[str, str] | None = None,
 ) -> list[tuple[str, str]]:
     """Generate a prefix map."""
     looked_up_prefix_map: dict[str, str] = {}
@@ -185,7 +185,7 @@ def iter_prefix_map(
     return sorted(chained_prefix_map.items(), key=lambda i: i[0].casefold())
 
 
-def get_axiom_str(reference: Reference, synonym: Synonym) -> Optional[str]:
+def get_axiom_str(reference: Reference, synonym: Synonym) -> str | None:
     """Get the axiom string for a synonym."""
     axiom_parts = []
     if synonym.contributor:
@@ -226,8 +226,8 @@ def _write_owl_rdf(  # noqa:C901
         bool, Doc("Should the @prefix definitions be added at the top?")
     ] = True,
     class_definitions: Annotated[bool, Doc("Should the `a owl:Class` and label be added?")] = True,
-    metadata: Optional[str] = None,
-    prefix_map: Optional[dict[str, str]] = None,
+    metadata: str | None = None,
+    prefix_map: dict[str, str] | None = None,
 ) -> None:
     dd = group_synonyms(synonyms)
 
