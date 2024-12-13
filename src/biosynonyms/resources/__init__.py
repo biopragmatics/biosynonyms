@@ -15,7 +15,7 @@ from typing import (
 
 import pandas as pd
 import requests
-from curies import Reference
+from curies import NamedReference, Reference
 from pydantic import BaseModel, Field
 from pydantic_extra_types.language_code import LanguageAlpha2
 from tqdm import tqdm
@@ -90,8 +90,7 @@ class Synonym(BaseModel):
         description="The language of the synonym. If not given, typically "
         "assumed to be american english.",
     )
-    reference: Reference
-    name: str
+    reference: NamedReference
     scope: Reference = Field(
         default=Reference.from_curie("oboInOwl:hasSynonym"),
         description="The predicate that connects the term (as subject) "
@@ -129,6 +128,11 @@ class Synonym(BaseModel):
         return rv
 
     @property
+    def name(self) -> str:
+        """Get the reference's name."""
+        return self.reference.name
+
+    @property
     def curie(self) -> str:
         """Get the reference's CURIE."""
         return self.reference.curie
@@ -157,8 +161,9 @@ class Synonym(BaseModel):
         name = (names or {}).get(reference) or row.get("name") or row["text"]
         data = {
             "text": row["text"],
-            "reference": reference,
-            "name": name,
+            "reference": NamedReference(
+                prefix=reference.prefix, identifier=reference.identifier, name=name
+            ),
             "scope": (
                 Reference.from_curie(scope_curie.strip())
                 if (scope_curie := row.get("scope"))
@@ -197,8 +202,7 @@ class Synonym(BaseModel):
         data = {
             "text": term.text,
             # TODO standardize?
-            "reference": Reference(prefix=term.db, identifier=term.id),
-            "name": term.entry_name,
+            "reference": NamedReference(prefix=term.db, identifier=term.id, name=term.entry_name),
             "source": term.source,
         }
         return cls.model_validate(data)
