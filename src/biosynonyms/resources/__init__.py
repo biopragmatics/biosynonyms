@@ -157,11 +157,13 @@ class Synonym(BaseModel):
         cls, row: dict[str, Any], *, names: Mapping[Reference, str] | None = None
     ) -> Synonym:
         """Parse a dictionary representing a row in a TSV."""
+        reference = Reference.from_curie(row["curie"])
         name = (names or {}).get(reference) or row.get("name") or row["text"]
-        reference = NamedReference.from_curie(row["curie"], name)
         data = {
             "text": row["text"],
-            "reference": reference,
+            "reference": NamedReference(
+                prefix=reference.prefix, identifier=reference.identifier, name=name
+            ),
             "scope": (
                 Reference.from_curie(scope_curie.strip())
                 if (scope_curie := row.get("scope"))
