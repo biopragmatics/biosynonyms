@@ -131,7 +131,7 @@ class Synonym(BaseModel):
     @property
     def curie(self) -> str:
         """Get the reference's CURIE."""
-        return cast(str, self.reference.curie)
+        return self.reference.curie
 
     @property
     def date_str(self) -> str:

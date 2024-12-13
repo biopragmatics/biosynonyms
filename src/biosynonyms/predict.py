@@ -20,7 +20,7 @@ from collections.abc import Iterable
 from functools import partial
 from itertools import permutations
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import bioregistry
 import click
@@ -65,10 +65,7 @@ def ensure_procesed_statements() -> Path:
     # s3://bigmech/indra-db/dumps/principal/2023-05-05/processed_statements.tsv.gz
     bucket = "bigmech"
     key = "indra-db/dumps/principal/2023-05-05/processed_statements.tsv.gz"
-    return cast(
-        Path,
-        MODULE.ensure_from_s3("principal", "2023-05-05", s3_bucket=bucket, s3_key=key),
-    )
+    return MODULE.ensure_from_s3("principal", "2023-05-05", s3_bucket=bucket, s3_key=key)
 
 
 def norm(s: str) -> str:
@@ -77,7 +74,7 @@ def norm(s: str) -> str:
 
 
 def _norm_strict(prefix: str, identifier: str) -> ReferenceTuple:
-    norm_prefix, norm_identifier = bioregistry.normalize_parsed_curie(prefix, identifier)
+    norm_prefix, norm_identifier = bioregistry.normalize_parsed_curie(prefix, identifier)  # type:ignore [attr-defined]
     if not norm_prefix or not norm_identifier:
         raise ValueError
     return ReferenceTuple(norm_prefix, norm_identifier)
