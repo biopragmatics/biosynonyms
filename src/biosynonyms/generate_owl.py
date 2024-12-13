@@ -170,14 +170,14 @@ def iter_prefix_map(
         if prefix_map and prefix in prefix_map:
             pass  # given explicitly, no need to look up in bioregistry
         elif prefix not in looked_up_prefix_map:
-            resource = bioregistry.get_resource(prefix)
+            resource = bioregistry.get_resource(prefix)  # type:ignore [attr-defined]
             if resource is None:
                 raise ValueError(f"Prefix {prefix} is not registered in the Bioregistry")
             uri_prefix = resource.rdf_uri_format or resource.get_uri_prefix()
             if uri_prefix is None:
                 raise ValueError(
                     f"Prefix has no URI expansion in Bioregistry: "
-                    f"{prefix} ({bioregistry.get_name(prefix)})"
+                    f"{prefix} ({bioregistry.get_name(prefix)})"  # type:ignore [attr-defined]
                 )
             looked_up_prefix_map[prefix] = uri_prefix
 
