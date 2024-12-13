@@ -52,7 +52,7 @@ class TestIntegrity(unittest.TestCase):
                     scope,
                     synonym_type,
                     references,
-                    orcid,
+                    contributor_curie,
                     date,
                     lang,
                     comment,
@@ -66,7 +66,7 @@ class TestIntegrity(unittest.TestCase):
                 for reference in references.split(",") if references else []:
                     reference = reference.strip()
                     self.assert_curie(reference)
-                self.assert_curie(f"orcid:{orcid}")
+                self.assert_curie(contributor_curie)
                 if date:
                     self.assertRegex(date, "\\d{4}-\\d{2}-\\d{2}")
 
@@ -86,13 +86,13 @@ class TestIntegrity(unittest.TestCase):
         for row_index, row in enumerate(rows, start=1):
             with self.subTest(row=row_index):
                 self.assertEqual(5, len(row))
-                text, curie, _name, references, orcid = row
+                text, curie, _name, references, contributor_curie = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
                 for reference in references.split(","):
                     reference = reference.strip()
                     self.assert_curie(reference)
-                self.assert_curie(f"orcid:{orcid}")
+                self.assert_curie(contributor_curie)
 
         # test sorted
         self.assertEqual(

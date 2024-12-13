@@ -175,8 +175,8 @@ class Synonym(BaseModel):
             "comment": row.get("comment") or None,
             "source": row.get("source") or None,
         }
-        if contributor := (row.get("contributor") or "").strip():
-            data["contributor"] = Reference(prefix="orcid", identifier=contributor)
+        if contributor_curie := (row.get("contributor") or "").strip():
+            data["contributor"] = Reference.from_curie(contributor_curie)
         if date := (row.get("date") or "").strip():
             data["date"] = datetime.datetime.strptime(date, "%Y-%m-%d")
 
