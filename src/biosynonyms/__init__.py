@@ -12,10 +12,10 @@ from .resources import (
 
 __all__ = [
     "Synonym",
-    "get_positive_synonyms",
-    "get_negative_synonyms",
-    "parse_synonyms",
     "get_gilda_terms",
-    "load_unentities",
+    "get_negative_synonyms",
+    "get_positive_synonyms",
     "group_synonyms",
+    "load_unentities",
+    "parse_synonyms",
 ]

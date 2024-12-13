@@ -24,17 +24,14 @@ if TYPE_CHECKING:
     import gilda
 
 __all__ = [
-    # Data model
     "Synonym",
-    # Get at the data
-    "get_positive_synonyms",
-    "get_negative_synonyms",
-    "load_unentities",
-    "write_unentities",
-    # Utilities
     "get_gilda_terms",
-    "parse_synonyms",
+    "get_negative_synonyms",
+    "get_positive_synonyms",
     "group_synonyms",
+    "load_unentities",
+    "parse_synonyms",
+    "write_unentities",
 ]
 
 HERE = Path(__file__).parent.resolve()
