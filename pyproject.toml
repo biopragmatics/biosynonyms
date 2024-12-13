@@ -56,7 +56,7 @@ dependencies = [
     "click",
     "more_click",
     "tqdm",
-    "curies",
+    "curies>=0.9.0",
     "bioregistry",
     "pandas",
     "pydantic>=2.0",
