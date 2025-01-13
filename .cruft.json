@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/cthoyt/cookiecutter-snekpack",
-  "commit": "2bcd26d7116bc302fbda181db4a99df6903541bb",
+  "commit": "1d7c52b5fbad984d3027e3b04bc2a6973056454f",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -8,6 +8,7 @@
       "package_name_stylized": "Biosynonyms",
       "short_description": "Decentralized database of biomedical synonyms",
       "author_name": "Charles Tapley Hoyt",
+      "author_github": "",
       "author_email": "cthoyt@gmail.com",
       "github_organization_name": "biopragmatics",
       "github_repository_name": "biosynonyms",
@@ -19,7 +20,8 @@
       "__runner_pip": "tox tox-uv",
       "__runner_tests": "py",
       "__gh_slug": "biopragmatics/biosynonyms",
-      "_template": "https://github.com/cthoyt/cookiecutter-snekpack"
+      "_template": "https://github.com/cthoyt/cookiecutter-snekpack",
+      "_commit": "1d7c52b5fbad984d3027e3b04bc2a6973056454f"
     }
   },
   "directory": null
