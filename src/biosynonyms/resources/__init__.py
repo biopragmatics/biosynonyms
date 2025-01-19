@@ -104,11 +104,10 @@ class Synonym(BaseModel):
 
     provenance: list[Reference] = Field(
         default_factory=list,
-        description="A list of articles (e.g., from PubMed, PMC, arXiv) "
-        "where this synonym appears",
+        description="A list of articles (e.g., from PubMed, PMC, arXiv) where this synonym appears",
     )
     contributor: Reference | None = Field(
-        None, description="The contributor, usually given as a " "reference to ORCID"
+        None, description="The contributor, usually given as a reference to ORCID"
     )
     comment: str | None = Field(
         None, description="An optional comment on the synonym curation or status"
