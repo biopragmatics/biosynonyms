@@ -315,7 +315,16 @@ def _from_dicts(
     *,
     names: Mapping[Reference, str] | None = None,
 ) -> list[Synonym]:
-    return [Synonym.from_row(record, names=names) for record in dicts if record]
+    rv = []
+    for i, record in enumerate(dicts, start=2):
+        record = {k: v for k, v in record.items() if k and v and k.strip() and v.strip()}
+        if record:
+            try:
+                synonym = Synonym.from_row(record, names=names)
+            except ValueError as e:
+                raise ValueError(f"failed on row {i}: {record}") from e
+            rv.append(synonym)
+    return rv
 
 
 def get_gilda_terms() -> Iterable[gilda.Term]:
