@@ -123,7 +123,7 @@ def main(size: int, force: bool) -> None:
         from embiggen import GraphVisualizer
 
         visualizer = GraphVisualizer(graph)
-        fig, axes = visualizer.fit_and_plot_all(embedding)
+        fig, _axes = visualizer.fit_and_plot_all(embedding)
         click.echo(f"Outputting plots to {PLOT_PATH}")
         plt.savefig(PLOT_PATH, dpi=300)
         plt.close(fig)
