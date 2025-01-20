@@ -54,11 +54,9 @@ license = { file = "LICENSE" }
 requires-python = ">=3.10"
 dependencies = [
     "click",
-    "more_click",
     "tqdm",
     "curies>=0.9.0",
     "bioregistry",
-    "pandas",
     "pydantic>=2.0",
     "pydantic_extra_types",
     "pycountry",
@@ -92,7 +90,9 @@ predict = [
     "matplotlib",
     "seaborn",
     "pyarrow",
-    "fastparquet"
+    "fastparquet",
+    "pandas",
+    "more_click",
 ]
 
 # See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#urls

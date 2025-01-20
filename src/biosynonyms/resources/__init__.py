@@ -13,7 +13,6 @@ from typing import (
     cast,
 )
 
-import pandas as pd
 import requests
 from curies import NamedReference, Reference
 from pydantic import BaseModel, Field
@@ -243,7 +242,7 @@ def _gilda_term(
 
 
 def _safe_parse_curie(x) -> Reference | None:  # type:ignore
-    if pd.isna(x) or not x.strip():
+    if not isinstance(x, str) or not x.strip():
         return None
     return Reference.from_curie(x.strip())
 
