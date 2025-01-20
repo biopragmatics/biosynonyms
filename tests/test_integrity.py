@@ -4,17 +4,16 @@ import unittest
 from collections import Counter
 
 import bioregistry
-import gilda
 from curies import ReferenceTuple
 
 import biosynonyms
+from biosynonyms.model import _sort_key
 from biosynonyms.resources import (
     NEGATIVES_PATH,
     POSITIVES_PATH,
     SYNONYM_SCOPES,
     UNENTITIES_PATH,
     _unentities_key,
-    sort_key,
 )
 
 
@@ -54,9 +53,9 @@ class TestIntegrity(unittest.TestCase):
                     references,
                     contributor_curie,
                     date,
-                    lang,
-                    comment,
-                    src,
+                    _lang,
+                    _comment,
+                    _src,
                 ) = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
@@ -71,7 +70,7 @@ class TestIntegrity(unittest.TestCase):
                     self.assertRegex(date, "\\d{4}-\\d{2}-\\d{2}")
 
         # test sorted
-        self.assertEqual(sorted(rows, key=sort_key), rows, msg="synonyms are not properly sorted")
+        self.assertEqual(sorted(rows, key=_sort_key), rows, msg="synonyms are not properly sorted")
 
         # test no duplicates
         c = Counter(row[:2] for row in rows)
@@ -96,7 +95,7 @@ class TestIntegrity(unittest.TestCase):
 
         # test sorted
         self.assertEqual(
-            sorted(rows, key=sort_key),
+            sorted(rows, key=_sort_key),
             rows,
             msg="negative synonyms are not properly sorted",
         )
@@ -120,7 +119,7 @@ class TestIntegrity(unittest.TestCase):
 
     def test_gilda(self):
         """Test getting tilda terms."""
-        grounder = gilda.Grounder(biosynonyms.get_gilda_terms())
+        grounder = biosynonyms.get_grounder()
         scored_matches = grounder.ground("YAL021C")
         self.assertEqual(1, len(scored_matches))
         self.assertEqual("sgd", scored_matches[0].term.db)

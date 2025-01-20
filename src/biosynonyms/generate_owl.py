@@ -1,5 +1,9 @@
 """Generate OWL from the positive synonyms."""
 
+# TODO re-implement this using pyobo.
+
+from __future__ import annotations
+
 import gzip
 from collections import ChainMap
 from pathlib import Path
@@ -10,8 +14,8 @@ import bioregistry
 from curies import Reference
 from typing_extensions import Doc
 
-from biosynonyms import Synonym, get_positive_synonyms
-from biosynonyms.resources import _clean_str, group_synonyms
+from biosynonyms.model import Synonym, group_synonyms
+from biosynonyms.resources import get_positive_synonyms
 
 HERE = Path(__file__).parent.resolve()
 EXPORT = HERE.parent.parent.joinpath("exports")
@@ -116,6 +120,14 @@ OMO:0003012 a owl:AnnotationProperty;
 """
 
 
+def _text_for_turtle(synonym: Synonym) -> str:
+    """Get the text ready for an object slot in Turtle, with optional language tag."""
+    tt = f'"{_clean_str(synonym.text)}"'
+    if synonym.language:
+        tt += f"@{synonym.language}"
+    return tt
+
+
 def write_owl_rdf(**kwargs: Any) -> None:
     """Write OWL RDF in a Turtle file."""
     with open(TTL_PATH, "w") as file:
@@ -211,7 +223,7 @@ def get_axiom_str(reference: Reference, synonym: Synonym) -> str | None:
     a owl:Axiom ;
     owl:annotatedSource {reference.curie} ;
     owl:annotatedProperty {synonym.scope.curie} ;
-    owl:annotatedTarget {synonym.text_for_turtle} ;
+    owl:annotatedTarget {_text_for_turtle(synonym)} ;
 {axiom_parts_str}
 ] .
 """
@@ -243,7 +255,7 @@ def _write_owl_rdf(  # noqa:C901
         mains: list[str] = []
         axiom_strs: list[str] = []
         for synonym in synonyms:
-            mains.append(f"{synonym.scope.curie} {synonym.text_for_turtle}")
+            mains.append(f"{synonym.scope.curie} {_text_for_turtle(synonym)}")
             if axiom_str := get_axiom_str(reference, synonym):
                 axiom_strs.append(axiom_str)
 
@@ -263,6 +275,10 @@ def _write_owl_rdf(  # noqa:C901
             file.write("\n")
         for axiom_str in axiom_strs:
             file.write(dedent(axiom_str))
+
+
+def _clean_str(s: str) -> str:
+    return s
 
 
 if __name__ == "__main__":
