@@ -53,6 +53,10 @@ HEADER = list(SynonymTuple._fields)
 #: A set of permissible predicates
 PREDICATES = [v.has_label, *v.synonym_scopes.values()]
 
+#: The default synonym type predicate was chosen based on the OBO
+#: standard - when you don't specify a scope, this is what it infers
+DEFAULT_PREDICATE = v.has_related_synonym
+
 
 class Synonym(BaseModel):
     """A data model for synonyms."""
@@ -60,7 +64,7 @@ class Synonym(BaseModel):
     # the first four fields are the core of the literal mapping
     reference: NamedReference = Field(..., description="The subject of the literal mapping")
     predicate: Reference = Field(
-        default=v.has_related_synonym,
+        default=DEFAULT_PREDICATE,
         description="The predicate that connects the term (as subject) "
         "to the textual synonym (as object)",
         examples=PREDICATES,
@@ -172,28 +176,51 @@ class Synonym(BaseModel):
             source=self.source or None,
         )
 
+    @staticmethod
+    def _predicate_type_from_gilda(status: GildaStatus) -> tuple[Reference, Reference | None]:
+        if status == "name":
+            return v.has_label, None
+        elif status == "former_name":
+            return DEFAULT_PREDICATE, v.previous_name
+        elif status == "synonym":
+            return DEFAULT_PREDICATE, None
+        elif status == "curated":
+            # assume higher confidence in exact synonym
+            return v.has_exact_synonym, None
+        raise ValueError(f"unhandled gilda status: {status}")
+
     @classmethod
     def from_gilda(cls, term: gilda.Term) -> Synonym:
-        """Get this synonym as a gilda term.
+        """Construct a synonym from a :mod:`gilda` term.
 
         :param term: A Gilda term
         :returns: A synonym object
 
         .. warning::
 
-            Gilda's data model is less complete, so resulting synonym objects
+            Gilda's data model is less detailed, so resulting synonym objects
             will not have detailed curation provenance
         """
+        predicate, synonym_type = cls._predicate_type_from_gilda(term.status)
         data = {
-            "text": term.text,
-            # TODO standardize?
             "reference": NamedReference(prefix=term.db, identifier=term.id, name=term.entry_name),
+            "predicate": predicate,
+            "text": term.text,
+            "type": synonym_type,
             "source": term.source,
         }
         return cls.model_validate(data)
 
+    def _get_gilda_status(self) -> GildaStatus:
+        """Get the Gilda status for a synonym."""
+        if self.predicate and self.predicate.pair == v.has_label.pair:
+            return "name"
+        if self.type and self.type.pair == v.previous_name.pair:
+            return "former_name"
+        return "synonym"
+
     def to_gilda(self, organism: str | None = None) -> gilda.Term:
-        """Get this synonym as a gilda term.
+        """Get this synonym as a :mod:`gilda` term.
 
         :param organism:
             If this is a species-specific term, the NCBI Taxonomy identifier can be passed.
@@ -207,7 +234,7 @@ class Synonym(BaseModel):
             text=self.text,
             reference=self.reference,
             name=self.name,
-            status=_get_gilda_status(self),
+            status=self._get_gilda_status(),
             source=self.source,
             organism=organism,
         )
@@ -215,15 +242,6 @@ class Synonym(BaseModel):
 
 #: See https://github.com/gyorilab/gilda/blob/ea328734f26c91189438e6d3408562f990f38644/gilda/term.py#L167C1-L167C69
 GildaStatus: TypeAlias = Literal["name", "synonym", "curated", "former_name"]
-
-
-def _get_gilda_status(synonym: Synonym) -> GildaStatus:
-    """Get the Gilda status for a synonym."""
-    if synonym.predicate and synonym.predicate.pair == v.has_label.pair:
-        return "name"
-    if synonym.type and synonym.type.pair == v.previous_name.pair:
-        return "former_name"
-    return "synonym"
 
 
 def _gilda_term(
