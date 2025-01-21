@@ -37,7 +37,7 @@ class SynonymTuple(NamedTuple):
     text: str
     curie: str
     name: str
-    scope: str
+    predicate: str
     type: str | None
     provenance: str | None
     contributor: str | None
@@ -50,6 +50,9 @@ class SynonymTuple(NamedTuple):
 #: The header for the spreadsheet
 HEADER = list(SynonymTuple._fields)
 
+#: A set of permissible predicates
+PREDICATES = [v.has_label, *v.synonym_scopes.values()]
+
 
 class Synonym(BaseModel):
     """A data model for synonyms."""
@@ -61,15 +64,17 @@ class Synonym(BaseModel):
         "assumed to be american english.",
     )
     reference: NamedReference
-    scope: Reference = Field(
-        default=Reference.from_curie("oboInOwl:hasSynonym"),
+    predicate: Reference = Field(
+        default=v.has_related_synonym,
         description="The predicate that connects the term (as subject) "
         "to the textual synonym (as object)",
+        examples=PREDICATES,
     )
     type: Reference | None = Field(
         default=None,
         title="Synonym type",
         description="See the OBO Metadata Ontology for valid values",
+        examples=list(v.synonym_types),
     )
 
     provenance: list[Reference] = Field(
@@ -77,7 +82,9 @@ class Synonym(BaseModel):
         description="A list of articles (e.g., from PubMed, PMC, arXiv) where this synonym appears",
     )
     contributor: Reference | None = Field(
-        None, description="The contributor, usually given as a reference to ORCID"
+        None,
+        description="The contributor, usually given as a reference to ORCID",
+        examples=[v.charlie],
     )
     comment: str | None = Field(
         None, description="An optional comment on the synonym curation or status"
@@ -89,7 +96,7 @@ class Synonym(BaseModel):
 
     def get_all_references(self) -> set[Reference]:
         """Get all references made by this object."""
-        rv: set[Reference] = {self.reference, self.scope, *self.provenance}
+        rv: set[Reference] = {self.reference, self.predicate, *self.provenance}
         if self.type:
             rv.add(self.type)
         if self.contributor:
@@ -125,10 +132,10 @@ class Synonym(BaseModel):
             "reference": NamedReference(
                 prefix=reference.prefix, identifier=reference.identifier, name=name
             ),
-            "scope": (
-                Reference.from_curie(scope_curie.strip())
-                if (scope_curie := row.get("scope"))
-                else Reference.from_curie("oboInOwl:hasSynonym")
+            "predicate": (
+                Reference.from_curie(predicate_curie.strip())
+                if (predicate_curie := row.get("predicate"))
+                else v.has_related_synonym
             ),
             "type": _safe_parse_curie(row["type"]) if "type" in row else None,
             "provenance": [
@@ -154,7 +161,7 @@ class Synonym(BaseModel):
             text=self.text,
             curie=self.curie,
             name=self.name,
-            scope=self.scope.curie,
+            predicate=self.predicate.curie,
             type=self.type.curie if self.type else None,
             provenance=",".join(p.curie for p in self.provenance) if self.provenance else None,
             contributor=self.contributor.curie if self.contributor is not None else None,
@@ -204,7 +211,7 @@ GildaStatus: TypeAlias = Literal["name", "synonym", "curated", "former_name"]
 
 def _get_gilda_status(synonym: Synonym) -> GildaStatus:
     """Get the Gilda status for a synonym."""
-    if synonym.scope and synonym.scope.pair == v.has_label.pair:
+    if synonym.predicate and synonym.predicate.pair == v.has_label.pair:
         return "name"
     if synonym.type and synonym.type.pair == v.previous_name.pair:
         return "former_name"
