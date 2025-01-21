@@ -140,7 +140,9 @@ class TestIntegrity(unittest.TestCase):
         gilda_term_2 = synonym_2.to_gilda()
         self.assertEqual("name", gilda_term_2.status)
 
-        synonym_3 = Synonym(text="old test", scope=label, reference=reference, type=v.previous_name)
+        synonym_3 = Synonym(
+            text="old test", scope=v.has_exact_synonym, reference=reference, type=v.previous_name
+        )
         gilda_term_3 = synonym_3.to_gilda()
         self.assertEqual("former_name", gilda_term_3.status)
 
