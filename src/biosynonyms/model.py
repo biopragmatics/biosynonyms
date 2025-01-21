@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import csv
 import datetime
+import importlib.util
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import requests
 from curies import NamedReference, Reference
@@ -20,11 +21,33 @@ if TYPE_CHECKING:
 
 __all__ = [
     "Synonym",
+    "SynonymTuple",
     "append_synonym",
     "group_synonyms",
     "lint_synonyms",
     "parse_synonyms",
+    "write_synonyms",
 ]
+
+
+class SynonymTuple(NamedTuple):
+    """Represents rows in a spreadsheet."""
+
+    text: str
+    curie: str
+    name: str
+    scope: str
+    type: str | None
+    provenance: str | None
+    contributor: str | None
+    date: str | None
+    language: str | None
+    comment: str | None
+    source: str | None
+
+
+#: The header for the spreadsheet
+HEADER = list(SynonymTuple._fields)
 
 
 class Synonym(BaseModel):
@@ -124,6 +147,22 @@ class Synonym(BaseModel):
 
         return cls.model_validate(data)
 
+    def as_row(self) -> SynonymTuple:
+        """Get the synonym as a row for writing."""
+        return SynonymTuple(
+            text=self.text,
+            curie=self.curie,
+            name=self.name,
+            scope=self.scope.curie,
+            type=self.type.curie if self.type else None,
+            provenance=",".join(p.curie for p in self.provenance) if self.provenance else None,
+            contributor=self.contributor.curie if self.contributor is not None else None,
+            date=self.date_str if self.date is not None else None,
+            language=self.language or None,
+            comment=self.comment or None,
+            source=self.source or None,
+        )
+
     @classmethod
     def from_gilda(cls, term: gilda.Term) -> Synonym:
         """Get this synonym as a gilda term.
@@ -184,6 +223,34 @@ def _safe_parse_curie(x) -> Reference | None:  # type:ignore
     if not isinstance(x, str) or not x.strip():
         return None
     return Reference.from_curie(x.strip())
+
+
+def write_synonyms(path: str | Path, synonyms: Iterable[Synonym]) -> None:
+    """Write synonyms to a path."""
+    path = Path(path).expanduser().resolve()
+    rows = (synonym.as_row() for synonym in synonyms)
+    if importlib.util.find_spec("pandas"):
+        _write_pandas(path, rows)
+    else:
+        _write_builtin(path, rows)
+
+
+def _write_builtin(path: Path, rows: Iterable[SynonymTuple]) -> None:
+    with path.open("w") as file:
+        writer = csv.writer(file, delimiter="\t")
+        writer.writerow(HEADER)
+        writer.writerows(rows)
+
+
+def _write_pandas(path: Path, rows: Iterable[SynonymTuple]) -> None:
+    import pandas as pd
+
+    df = pd.DataFrame(rows, columns=HEADER)
+    remove = [col for col in HEADER if df[col].isna().all()]
+    for col in remove:
+        del df[col]
+
+    df.to_csv(path, index=False, sep="\t")
 
 
 def append_synonym(path: str | Path, synonym: Synonym) -> None:
