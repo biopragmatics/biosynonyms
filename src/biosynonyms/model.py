@@ -23,13 +23,11 @@ if TYPE_CHECKING:
 __all__ = [
     "LiteralMapping",
     "LiteralMappingTuple",
-    "Synonym",
-    "SynonymTuple",
-    "append_synonym",
-    "group_synonyms",
-    "lint_synonyms",
-    "parse_synonyms",
-    "write_synonyms",
+    "append_literal_mapping",
+    "group_literal_mappings",
+    "lint_literal_mappings",
+    "read_literal_mappings",
+    "write_literal_mappings",
 ]
 
 
@@ -144,7 +142,7 @@ class LiteralMapping(BaseModel):
             "predicate": (
                 Reference.from_curie(predicate_curie.strip())
                 if (predicate_curie := row.get("predicate"))
-                else v.has_related_synonym
+                else DEFAULT_PREDICATE
             ),
             "type": _safe_parse_curie(row["type"]) if "type" in row else None,
             "provenance": [
@@ -280,10 +278,10 @@ def _safe_parse_curie(x) -> Reference | None:  # type:ignore
     return Reference.from_curie(x.strip())
 
 
-def write_synonyms(path: str | Path, synonyms: Iterable[LiteralMapping]) -> None:
-    """Write synonyms to a path."""
+def write_literal_mappings(path: str | Path, literal_mappings: Iterable[LiteralMapping]) -> None:
+    """Write literal mappings to a path."""
     path = Path(path).expanduser().resolve()
-    rows = (synonym._as_row() for synonym in synonyms)
+    rows = (literal_mapping._as_row() for literal_mapping in literal_mappings)
     if importlib.util.find_spec("pandas"):
         _write_pandas(path, rows)
     else:
@@ -308,24 +306,24 @@ def _write_pandas(path: Path, rows: Iterable[LiteralMappingTuple]) -> None:
     df.to_csv(path, index=False, sep="\t")
 
 
-def append_synonym(path: str | Path, synonym: LiteralMapping) -> None:
-    """Append a synonym to an existing file."""
+def append_literal_mapping(path: str | Path, literal_mapping: LiteralMapping) -> None:
+    """Append a literal mapping to an existing file."""
     raise NotImplementedError
 
 
-def parse_synonyms(
+def read_literal_mappings(
     path: str | Path,
     *,
     delimiter: str | None = None,
     names: Mapping[Reference, str] | None = None,
 ) -> list[LiteralMapping]:
-    """Load synonyms from a file.
+    """Load literal mappings from a file.
 
     :param path: A local file path or URL for a biosynonyms-flavored CSV/TSV file
     :param delimiter: The delimiter for the CSV/TSV file. Defaults to tab
     :param names: A pre-parsed dictionary from references
         (i.e., prefix-luid pairs) to default labels
-    :returns: A list of synonym objects parsed from the table
+    :returns: A list of literal mappings parsed from the table
     """
     if isinstance(path, str) and any(path.startswith(schema) for schema in ("https://", "http://")):
         res = requests.get(path, timeout=15)
@@ -375,31 +373,35 @@ def _from_dicts(
         record = {k: v for k, v in record.items() if k and v and k.strip() and v.strip()}
         if record:
             try:
-                synonym = LiteralMapping.from_row(record, names=names)
+                literal_mapping = LiteralMapping.from_row(record, names=names)
             except ValueError as e:
                 raise ValueError(f"failed on row {i}: {record}") from e
-            rv.append(synonym)
+            rv.append(literal_mapping)
     return rv
 
 
-def group_synonyms(synonyms: Iterable[LiteralMapping]) -> dict[Reference, list[LiteralMapping]]:
-    """Aggregate synonyms by reference."""
+def group_literal_mappings(
+    literal_mappings: Iterable[LiteralMapping],
+) -> dict[Reference, list[LiteralMapping]]:
+    """Aggregate literal mappings by reference."""
     dd: defaultdict[Reference, list[LiteralMapping]] = defaultdict(list)
-    for synonym in tqdm(synonyms, unit="synonym", unit_scale=True, leave=False):
-        dd[synonym.reference].append(synonym)
+    for literal_mapping in tqdm(
+        literal_mappings, unit="literal mapping", unit_scale=True, leave=False
+    ):
+        dd[literal_mapping.reference].append(literal_mapping)
     return dict(dd)
 
 
-def grounder_from_synonyms(synonyms: Iterable[LiteralMapping]) -> gilda.Grounder:
-    """Get a Gilda grounder from synonyms."""
+def grounder_from_literal_mappings(literal_mappings: Iterable[LiteralMapping]) -> gilda.Grounder:
+    """Get a Gilda grounder from literal mappings."""
     import gilda
 
-    rv = gilda.Grounder([synonym.to_gilda() for synonym in synonyms])
+    rv = gilda.Grounder([literal_mapping.to_gilda() for literal_mapping in literal_mappings])
     return rv
 
 
-def lint_synonyms(path: Path) -> None:
-    """Lint a synonyms file."""
+def lint_literal_mappings(path: Path) -> None:
+    """Lint a literal mappings file."""
     with path.open() as file:
         header, *rows = (line.strip().split("\t") for line in file)
     rows = sorted(rows, key=_sort_key)

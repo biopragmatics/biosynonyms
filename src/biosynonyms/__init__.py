@@ -3,12 +3,10 @@
 from .model import (
     LiteralMapping,
     LiteralMappingTuple,
-    Synonym,
-    SynonymTuple,
-    grounder_from_synonyms,
-    group_synonyms,
-    parse_synonyms,
-    write_synonyms,
+    grounder_from_literal_mappings,
+    group_literal_mappings,
+    read_literal_mappings,
+    write_literal_mappings,
 )
 from .resources import (
     get_gilda_terms,
@@ -21,15 +19,13 @@ from .resources import (
 __all__ = [
     "LiteralMapping",
     "LiteralMappingTuple",
-    "Synonym",
-    "SynonymTuple",
     "get_gilda_terms",
     "get_grounder",
     "get_negative_synonyms",
     "get_positive_synonyms",
-    "grounder_from_synonyms",
-    "group_synonyms",
+    "grounder_from_literal_mappings",
+    "group_literal_mappings",
     "load_unentities",
-    "parse_synonyms",
-    "write_synonyms",
+    "read_literal_mappings",
+    "write_literal_mappings",
 ]

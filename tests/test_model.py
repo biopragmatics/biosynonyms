@@ -32,7 +32,9 @@ class TestModel(unittest.TestCase):
 
     def test_gilda_name(self) -> None:
         """Test getting gilda terms."""
-        literal_mapping = LiteralMapping(text="test", predicate=v.has_label, reference=TEST_REFERENCE)
+        literal_mapping = LiteralMapping(
+            text="test", predicate=v.has_label, reference=TEST_REFERENCE
+        )
         gilda_term = literal_mapping.to_gilda()
         self.assertEqual("name", gilda_term.status)
 
