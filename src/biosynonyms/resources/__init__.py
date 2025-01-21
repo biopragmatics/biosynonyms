@@ -6,7 +6,7 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from biosynonyms.model import PREDICATES, Synonym, grounder_from_synonyms, parse_synonyms
+from biosynonyms.model import PREDICATES, LiteralMapping, grounder_from_synonyms, parse_synonyms
 
 if TYPE_CHECKING:
     import gilda
@@ -52,12 +52,12 @@ def write_unentities(rows: Iterable[tuple[str, str]]) -> None:
             print(*row, sep="\t", file=file)
 
 
-def get_positive_synonyms() -> list[Synonym]:
+def get_positive_synonyms() -> list[LiteralMapping]:
     """Get positive synonyms curated in Biosynonyms."""
     return parse_synonyms(POSITIVES_PATH)
 
 
-def get_negative_synonyms() -> list[Synonym]:
+def get_negative_synonyms() -> list[LiteralMapping]:
     """Get negative synonyms curated in Biosynonyms."""
     return parse_synonyms(NEGATIVES_PATH)
 

@@ -14,7 +14,7 @@ import bioregistry
 from curies import Reference
 from typing_extensions import Doc
 
-from biosynonyms.model import Synonym, group_synonyms
+from biosynonyms.model import LiteralMapping, group_synonyms
 from biosynonyms.resources import get_positive_synonyms
 
 HERE = Path(__file__).parent.resolve()
@@ -120,7 +120,7 @@ OMO:0003012 a owl:AnnotationProperty;
 """
 
 
-def _text_for_turtle(synonym: Synonym) -> str:
+def _text_for_turtle(synonym: LiteralMapping) -> str:
     """Get the text ready for an object slot in Turtle, with optional language tag."""
     tt = f'"{_clean_str(synonym.text)}"'
     if synonym.language:
@@ -154,7 +154,7 @@ DEFAULT_PREFIXES: dict[str, str] = {
 }
 
 
-def _get_prefixes(dd: dict[Reference, list[Synonym]]) -> set[str]:
+def _get_prefixes(dd: dict[Reference, list[LiteralMapping]]) -> set[str]:
     return {
         reference.prefix
         for synonyms in dd.values()
@@ -197,7 +197,7 @@ def iter_prefix_map(
     return sorted(chained_prefix_map.items(), key=lambda i: i[0].casefold())
 
 
-def get_axiom_str(reference: Reference, synonym: Synonym) -> str | None:
+def get_axiom_str(reference: Reference, synonym: LiteralMapping) -> str | None:
     """Get the axiom string for a synonym."""
     axiom_parts = []
     if synonym.contributor:
@@ -231,7 +231,7 @@ def get_axiom_str(reference: Reference, synonym: Synonym) -> str | None:
 
 
 def _write_owl_rdf(  # noqa:C901
-    synonyms: list[Synonym],
+    synonyms: list[LiteralMapping],
     file: TextIO,
     *,
     prefix_definitions: Annotated[

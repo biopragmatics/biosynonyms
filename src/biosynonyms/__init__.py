@@ -1,6 +1,8 @@
 """Code for biosynonyms."""
 
 from .model import (
+    LiteralMapping,
+    LiteralMappingTuple,
     Synonym,
     SynonymTuple,
     grounder_from_synonyms,
@@ -17,6 +19,8 @@ from .resources import (
 )
 
 __all__ = [
+    "LiteralMapping",
+    "LiteralMappingTuple",
     "Synonym",
     "SynonymTuple",
     "get_gilda_terms",
