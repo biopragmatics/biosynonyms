@@ -14,7 +14,7 @@ from biosynonyms.model import Synonym, _sort_key
 from biosynonyms.resources import (
     NEGATIVES_PATH,
     POSITIVES_PATH,
-    SYNONYM_SCOPES,
+    SYNONYM_PREDICATE_CURIES,
     UNENTITIES_PATH,
     _unentities_key,
 )
@@ -51,7 +51,7 @@ class TestIntegrity(unittest.TestCase):
                     text,
                     curie,
                     _name,
-                    scope,
+                    predicate,
                     synonym_type,
                     references,
                     contributor_curie,
@@ -62,7 +62,7 @@ class TestIntegrity(unittest.TestCase):
                 ) = row
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
-                self.assertIn(scope, SYNONYM_SCOPES)
+                self.assertIn(predicate, SYNONYM_PREDICATE_CURIES)
                 if synonym_type:
                     self.assertTrue(synonym_type.startswith("OMO:"))
                 for reference in references.split(",") if references else []:
@@ -131,17 +131,20 @@ class TestIntegrity(unittest.TestCase):
         reference = NamedReference.from_curie("test:1", "test")
         label = Reference.from_curie("rdfs:label")
         synonym_1 = Synonym(
-            text="tests", scope=v.has_exact_synonym, type=v.plural_form, reference=reference
+            text="tests", predicate=v.has_exact_synonym, type=v.plural_form, reference=reference
         )
         gilda_term_1 = synonym_1.to_gilda()
         self.assertEqual("synonym", gilda_term_1.status)
 
-        synonym_2 = Synonym(text="test", scope=label, reference=reference)
+        synonym_2 = Synonym(text="test", predicate=label, reference=reference)
         gilda_term_2 = synonym_2.to_gilda()
         self.assertEqual("name", gilda_term_2.status)
 
         synonym_3 = Synonym(
-            text="old test", scope=v.has_exact_synonym, reference=reference, type=v.previous_name
+            text="old test",
+            predicate=v.has_exact_synonym,
+            reference=reference,
+            type=v.previous_name,
         )
         gilda_term_3 = synonym_3.to_gilda()
         self.assertEqual("former_name", gilda_term_3.status)

@@ -6,7 +6,7 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from biosynonyms.model import Synonym, grounder_from_synonyms, parse_synonyms
+from biosynonyms.model import PREDICATES, Synonym, grounder_from_synonyms, parse_synonyms
 
 if TYPE_CHECKING:
     import gilda
@@ -25,13 +25,7 @@ POSITIVES_PATH = HERE.joinpath("positives.tsv")
 NEGATIVES_PATH = HERE.joinpath("negatives.tsv")
 UNENTITIES_PATH = HERE.joinpath("unentities.tsv")
 
-SYNONYM_SCOPES = {
-    "oboInOwl:hasExactSynonym",
-    "oboInOwl:hasNarrowSynonym",
-    "oboInOwl:hasBroadSynonym",
-    "oboInOwl:hasRelatedSynonym",
-    "oboInOwl:hasSynonym",
-}
+SYNONYM_PREDICATE_CURIES: set[str] = {p.curie for p in PREDICATES}
 
 
 def load_unentities() -> set[str]:

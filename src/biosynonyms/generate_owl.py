@@ -222,7 +222,7 @@ def get_axiom_str(reference: Reference, synonym: Synonym) -> str | None:
 [
     a owl:Axiom ;
     owl:annotatedSource {reference.curie} ;
-    owl:annotatedProperty {synonym.scope.curie} ;
+    owl:annotatedProperty {synonym.predicate.curie} ;
     owl:annotatedTarget {_text_for_turtle(synonym)} ;
 {axiom_parts_str}
 ] .
@@ -255,7 +255,7 @@ def _write_owl_rdf(  # noqa:C901
         mains: list[str] = []
         axiom_strs: list[str] = []
         for synonym in synonyms:
-            mains.append(f"{synonym.scope.curie} {_text_for_turtle(synonym)}")
+            mains.append(f"{synonym.predicate.curie} {_text_for_turtle(synonym)}")
             if axiom_str := get_axiom_str(reference, synonym):
                 axiom_strs.append(axiom_str)
 
