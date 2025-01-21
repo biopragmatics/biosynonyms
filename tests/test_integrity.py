@@ -138,7 +138,7 @@ class TestIntegrity(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as d:
             path = Path(d).joinpath("test.tsv")
-            biosynonyms.write_synonyms(path, synonyms)
-            reloaded_synonyms = biosynonyms.parse_synonyms(path)
+            biosynonyms.write_literal_mappings(path, synonyms)
+            reloaded_synonyms = biosynonyms.read_literal_mappings(path)
 
         self.assertEqual(synonyms, reloaded_synonyms)

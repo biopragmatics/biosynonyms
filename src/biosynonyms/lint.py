@@ -1,6 +1,6 @@
 """Sort the synonyms file."""
 
-from biosynonyms.model import lint_synonyms
+from biosynonyms.model import lint_literal_mappings
 
 from .resources import (
     NEGATIVES_PATH,
@@ -11,8 +11,8 @@ from .resources import (
 
 
 def _main() -> None:
-    lint_synonyms(POSITIVES_PATH)
-    lint_synonyms(NEGATIVES_PATH)
+    lint_literal_mappings(POSITIVES_PATH)
+    lint_literal_mappings(NEGATIVES_PATH)
     write_unentities(list(_load_unentities()))
 
 

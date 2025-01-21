@@ -14,7 +14,7 @@ import bioregistry
 from curies import Reference
 from typing_extensions import Doc
 
-from biosynonyms.model import Synonym, group_synonyms
+from biosynonyms.model import LiteralMapping, group_literal_mappings
 from biosynonyms.resources import get_positive_synonyms
 
 HERE = Path(__file__).parent.resolve()
@@ -120,11 +120,11 @@ OMO:0003012 a owl:AnnotationProperty;
 """
 
 
-def _text_for_turtle(synonym: Synonym) -> str:
+def _text_for_turtle(literal_mapping: LiteralMapping) -> str:
     """Get the text ready for an object slot in Turtle, with optional language tag."""
-    tt = f'"{_clean_str(synonym.text)}"'
-    if synonym.language:
-        tt += f"@{synonym.language}"
+    tt = f'"{_clean_str(literal_mapping.text)}"'
+    if literal_mapping.language:
+        tt += f"@{literal_mapping.language}"
     return tt
 
 
@@ -154,12 +154,12 @@ DEFAULT_PREFIXES: dict[str, str] = {
 }
 
 
-def _get_prefixes(dd: dict[Reference, list[Synonym]]) -> set[str]:
+def _get_prefixes(dd: dict[Reference, list[LiteralMapping]]) -> set[str]:
     return {
         reference.prefix
-        for synonyms in dd.values()
-        for synonym in synonyms
-        for reference in synonym.get_all_references()
+        for literal_mappings in dd.values()
+        for literal_mapping in literal_mappings
+        for reference in literal_mapping.get_all_references()
     }
 
 
@@ -197,21 +197,21 @@ def iter_prefix_map(
     return sorted(chained_prefix_map.items(), key=lambda i: i[0].casefold())
 
 
-def get_axiom_str(reference: Reference, synonym: Synonym) -> str | None:
+def get_axiom_str(reference: Reference, literal_mapping: LiteralMapping) -> str | None:
     """Get the axiom string for a synonym."""
     axiom_parts = []
-    if synonym.contributor:
-        axiom_parts.append(f"dcterms:contributor {synonym.contributor.curie}")
-    if synonym.date:
-        axiom_parts.append(f'dcterms:date "{synonym.date_str}"^^xsd:date')
-    if synonym.source:
-        axiom_parts.append(f'dcterms:source "{_clean_str(synonym.source)}"')
-    if synonym.type:
-        axiom_parts.append(f"oboInOwl:hasSynonymType {synonym.type.curie}")
-    for rr in synonym.provenance:
+    if literal_mapping.contributor:
+        axiom_parts.append(f"dcterms:contributor {literal_mapping.contributor.curie}")
+    if literal_mapping.date:
+        axiom_parts.append(f'dcterms:date "{literal_mapping.date_str}"^^xsd:date')
+    if literal_mapping.source:
+        axiom_parts.append(f'dcterms:source "{_clean_str(literal_mapping.source)}"')
+    if literal_mapping.type:
+        axiom_parts.append(f"oboInOwl:hasSynonymType {literal_mapping.type.curie}")
+    for rr in literal_mapping.provenance:
         axiom_parts.append(f"oboInOwl:hasDbXref {rr.curie}")
-    if synonym.comment:
-        axiom_parts.append(f'rdfs:comment "{_clean_str(synonym.comment)}"')
+    if literal_mapping.comment:
+        axiom_parts.append(f'rdfs:comment "{_clean_str(literal_mapping.comment)}"')
 
     if not axiom_parts:
         # if there's no additional context to add, then we don't need to make an axiom
@@ -222,8 +222,8 @@ def get_axiom_str(reference: Reference, synonym: Synonym) -> str | None:
 [
     a owl:Axiom ;
     owl:annotatedSource {reference.curie} ;
-    owl:annotatedProperty {synonym.predicate.curie} ;
-    owl:annotatedTarget {_text_for_turtle(synonym)} ;
+    owl:annotatedProperty {literal_mapping.predicate.curie} ;
+    owl:annotatedTarget {_text_for_turtle(literal_mapping)} ;
 {axiom_parts_str}
 ] .
 """
@@ -231,7 +231,7 @@ def get_axiom_str(reference: Reference, synonym: Synonym) -> str | None:
 
 
 def _write_owl_rdf(  # noqa:C901
-    synonyms: list[Synonym],
+    literal_mappings: list[LiteralMapping],
     file: TextIO,
     *,
     prefix_definitions: Annotated[
@@ -241,7 +241,7 @@ def _write_owl_rdf(  # noqa:C901
     metadata: str | None = None,
     prefix_map: dict[str, str] | None = None,
 ) -> None:
-    dd = group_synonyms(synonyms)
+    dd = group_literal_mappings(literal_mappings)
 
     if prefix_definitions:
         write_prefix_map(_get_prefixes(dd), file=file, prefix_map=prefix_map)
@@ -251,18 +251,18 @@ def _write_owl_rdf(  # noqa:C901
 
     file.write(f"\n{PREAMBLE}\n")
 
-    for reference, synonyms in dd.items():
+    for reference, literal_mappings in dd.items():
         mains: list[str] = []
         axiom_strs: list[str] = []
-        for synonym in synonyms:
-            mains.append(f"{synonym.predicate.curie} {_text_for_turtle(synonym)}")
-            if axiom_str := get_axiom_str(reference, synonym):
+        for literal_mapping in literal_mappings:
+            mains.append(f"{literal_mapping.predicate.curie} {_text_for_turtle(literal_mapping)}")
+            if axiom_str := get_axiom_str(reference, literal_mapping):
                 axiom_strs.append(axiom_str)
 
         if class_definitions:
             file.write(f"\n{reference.curie} a owl:Class ;\n")
             try:
-                name = next(synonym.name for synonym in synonyms if synonym.name)
+                name = next(synonym.name for synonym in literal_mappings if synonym.name)
             except StopIteration:
                 pass  # could not extract a name, no worries!
             else:
