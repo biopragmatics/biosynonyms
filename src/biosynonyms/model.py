@@ -8,10 +8,11 @@ import importlib.util
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias
 
 import requests
 from curies import NamedReference, Reference
+from curies import vocabulary as v
 from pydantic import BaseModel, Field
 from pydantic_extra_types.language_code import LanguageAlpha2
 from tqdm import tqdm
@@ -183,7 +184,7 @@ class Synonym(BaseModel):
         }
         return cls.model_validate(data)
 
-    def to_gilda(self) -> gilda.Term:
+    def to_gilda(self, organism: str | None = None) -> gilda.Term:
         """Get this synonym as a gilda term."""
         if not self.name:
             raise ValueError("can't make a Gilda term without a label")
@@ -191,10 +192,23 @@ class Synonym(BaseModel):
             text=self.text,
             reference=self.reference,
             name=self.name,
-            # TODO is Gilda's status vocabulary worth building an OMO map to/from?
-            status="synonym",
-            source=self.source or "biosynonyms",
+            status=_get_gilda_status(self),
+            source=self.source,
+            organism=organism,
         )
+
+
+#: See https://github.com/gyorilab/gilda/blob/ea328734f26c91189438e6d3408562f990f38644/gilda/term.py#L167C1-L167C69
+GildaStatus: TypeAlias = Literal["name", "synonym", "curated", "former_name"]
+
+
+def _get_gilda_status(synonym: Synonym) -> GildaStatus:
+    """Get the Gilda status for a synonym."""
+    if synonym.scope and synonym.scope.pair == v.has_label.pair:
+        return "name"
+    if synonym.type and synonym.type.pair == v.previous_name.pair:
+        return "former_name"
+    return "synonym"
 
 
 def _gilda_term(
@@ -202,8 +216,9 @@ def _gilda_term(
     text: str,
     reference: Reference,
     name: str | None = None,
-    status: str,
+    status: GildaStatus,
     source: str | None,
+    organism: str | None = None,
 ) -> gilda.Term:
     import gilda
     from gilda.process import normalize
@@ -216,6 +231,7 @@ def _gilda_term(
         entry_name=name or text,
         status=status,
         source=source,
+        organism=organism,
     )
 
 

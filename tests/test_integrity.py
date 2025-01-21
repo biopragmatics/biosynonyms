@@ -6,10 +6,11 @@ from collections import Counter
 from pathlib import Path
 
 import bioregistry
-from curies import ReferenceTuple
+from curies import NamedReference, Reference, ReferenceTuple
+from curies import vocabulary as v
 
 import biosynonyms
-from biosynonyms.model import _sort_key
+from biosynonyms.model import Synonym, _sort_key
 from biosynonyms.resources import (
     NEGATIVES_PATH,
     POSITIVES_PATH,
@@ -126,6 +127,24 @@ class TestIntegrity(unittest.TestCase):
         self.assertEqual(1, len(scored_matches))
         self.assertEqual("sgd", scored_matches[0].term.db)
         self.assertEqual("S000000019", scored_matches[0].term.id)
+
+        reference = NamedReference.from_curie("test:1", "test")
+        label = Reference.from_curie("rdfs:label")
+        synonym_1 = Synonym(
+            text="tests", scope=v.has_exact_synonym, type=v.plural_form, reference=reference
+        )
+        gilda_term_1 = synonym_1.to_gilda()
+        self.assertEqual("synonym", gilda_term_1.status)
+
+        synonym_2 = Synonym(text="test", scope=label, reference=reference)
+        gilda_term_2 = synonym_2.to_gilda()
+        self.assertEqual("name", gilda_term_2.status)
+
+        synonym_3 = Synonym(
+            text="old test", scope=v.has_exact_synonym, reference=reference, type=v.previous_name
+        )
+        gilda_term_3 = synonym_3.to_gilda()
+        self.assertEqual("former_name", gilda_term_3.status)
 
     def test_model(self):
         """Test loading the data model."""
