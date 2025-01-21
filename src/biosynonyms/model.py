@@ -147,7 +147,7 @@ class Synonym(BaseModel):
 
         return cls.model_validate(data)
 
-    def as_row(self) -> SynonymTuple:
+    def _as_row(self) -> SynonymTuple:
         """Get the synonym as a row for writing."""
         return SynonymTuple(
             text=self.text,
@@ -228,7 +228,7 @@ def _safe_parse_curie(x) -> Reference | None:  # type:ignore
 def write_synonyms(path: str | Path, synonyms: Iterable[Synonym]) -> None:
     """Write synonyms to a path."""
     path = Path(path).expanduser().resolve()
-    rows = (synonym.as_row() for synonym in synonyms)
+    rows = (synonym._as_row() for synonym in synonyms)
     if importlib.util.find_spec("pandas"):
         _write_pandas(path, rows)
     else:
