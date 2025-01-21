@@ -63,8 +63,8 @@ columns:
    entity or concept, standardized using the Bioregistry
 3. `name` the standard name for the concept
 4. `predicate` the predicate which encodes the synonym scope, written as a CURIE
-   from the [OBO in OWL (`oio`)](https://bioregistry.io/oio) controlled
-   vocabulary, i.e., one of:
+   from the [OBO in OWL (`oboInOWL`)](https://bioregistry.io/oio) or RDFS
+   controlled vocabularies, e.g., one of:
    - `rdfs:label`
    - `oboInOwl:hasExactSynonym`
    - `oboInOwl:hasNarrowSynonym` (i.e., the synonym represents a narrower term)
@@ -103,7 +103,7 @@ Here's an example of some rows in the synonyms table (with linkified CURIEs):
 The [`negatives.tsv`](src/biosynonyms/resources/negatives.tsv) has the following
 columns for non-trivial examples of text strings that aren't synonyms. This
 document doesn't address the same issues as context-based disambiguation, but
-rather helps dscribe issues like incorrect sub-string matching:
+rather helps describe issues like incorrect sub-string matching:
 
 1. `text` the non-synonym text itself
 2. `curie` the compact uniform resource identifier (CURIE) for a biomedical
