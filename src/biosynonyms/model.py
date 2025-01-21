@@ -57,26 +57,27 @@ PREDICATES = [v.has_label, *v.synonym_scopes.values()]
 class Synonym(BaseModel):
     """A data model for synonyms."""
 
-    text: str
-    language: LanguageAlpha2 | None = Field(
-        None,
-        description="The language of the synonym. If not given, typically "
-        "assumed to be american english.",
-    )
-    reference: NamedReference
+    # the first four fields are the core of the literal mapping
+    reference: NamedReference = Field(..., description="The subject of the literal mapping")
     predicate: Reference = Field(
         default=v.has_related_synonym,
         description="The predicate that connects the term (as subject) "
         "to the textual synonym (as object)",
         examples=PREDICATES,
     )
+    text: str = Field(..., description="The object of the literal mapping")
+    language: LanguageAlpha2 | None = Field(
+        None,
+        description="The language of the synonym. If not given, typically "
+        "assumed to be american english.",
+    )
+
     type: Reference | None = Field(
         default=None,
         title="Synonym type",
-        description="See the OBO Metadata Ontology for valid values",
+        description="A qualification for the type of mapping",
         examples=list(v.synonym_types),
     )
-
     provenance: list[Reference] = Field(
         default_factory=list,
         description="A list of articles (e.g., from PubMed, PMC, arXiv) where this synonym appears",
@@ -192,7 +193,14 @@ class Synonym(BaseModel):
         return cls.model_validate(data)
 
     def to_gilda(self, organism: str | None = None) -> gilda.Term:
-        """Get this synonym as a gilda term."""
+        """Get this synonym as a gilda term.
+
+        :param organism:
+            If this is a species-specific term, the NCBI Taxonomy identifier can be passed.
+            e.g., '9606' for human.
+        :return:
+            An object that can be indexed by Gilda for NER and grounding
+        """
         if not self.name:
             raise ValueError("can't make a Gilda term without a label")
         return _gilda_term(
