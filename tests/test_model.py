@@ -5,7 +5,7 @@ import unittest
 from curies import NamedReference
 from curies import vocabulary as v
 
-from biosynonyms.model import Synonym
+from biosynonyms.model import DEFAULT_PREDICATE, Synonym
 
 TEST_REFERENCE = NamedReference.from_curie("test:1", "test")
 
@@ -26,7 +26,7 @@ class TestModel(unittest.TestCase):
 
         # the predicate and plural form information gets lost in the round trio
         synonym_re_expected = Synonym(
-            text="tests", predicate=v.has_related_synonym, reference=TEST_REFERENCE
+            text="tests", predicate=DEFAULT_PREDICATE, reference=TEST_REFERENCE
         )
         self.assertEqual(synonym_re_expected, Synonym.from_gilda(gilda_term))
 
@@ -40,6 +40,7 @@ class TestModel(unittest.TestCase):
 
     def test_gilda_former_name(self) -> None:
         """Test getting gilda terms."""
+        self.maxDiff = None
         synonym = Synonym(
             text="old test",
             predicate=v.has_exact_synonym,
@@ -51,6 +52,9 @@ class TestModel(unittest.TestCase):
 
         # the predicate gets lost in round trip
         synonym_re_expected = Synonym(
-            text="tests", predicate=v.has_related_synonym, reference=TEST_REFERENCE
+            text="old test",
+            predicate=DEFAULT_PREDICATE,
+            type=v.previous_name,
+            reference=TEST_REFERENCE,
         )
         self.assertEqual(synonym_re_expected, Synonym.from_gilda(gilda_term))
