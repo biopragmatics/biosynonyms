@@ -1,7 +1,9 @@
 """Tests for data integrity of biosynoynms database."""
 
+import tempfile
 import unittest
 from collections import Counter
+from pathlib import Path
 
 import bioregistry
 from curies import ReferenceTuple
@@ -129,3 +131,14 @@ class TestIntegrity(unittest.TestCase):
         """Test loading the data model."""
         biosynonyms.get_positive_synonyms()
         biosynonyms.get_negative_synonyms()
+
+    def test_io_roundtrip(self) -> None:
+        """Test IO roundtrip."""
+        synonyms = biosynonyms.get_positive_synonyms()[:3]  # sample just a few
+
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d).joinpath("test.tsv")
+            biosynonyms.write_synonyms(path, synonyms)
+            reloaded_synonyms = biosynonyms.parse_synonyms(path)
+
+        self.assertEqual(synonyms, reloaded_synonyms)
