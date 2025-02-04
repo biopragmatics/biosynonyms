@@ -237,7 +237,7 @@ class LiteralMapping(BaseModel):
             reference=self.reference,
             name=self.name,
             status=self._get_gilda_status(),
-            source=self.source,
+            source=self.source or self.reference.prefix,
             organism=organism,
         )
 
