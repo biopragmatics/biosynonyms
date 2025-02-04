@@ -19,6 +19,7 @@ from tqdm import tqdm
 
 if TYPE_CHECKING:
     import gilda
+    import pandas
 
 __all__ = [
     "LiteralMapping",
@@ -26,6 +27,7 @@ __all__ = [
     "append_literal_mapping",
     "group_literal_mappings",
     "lint_literal_mappings",
+    "literal_mappings_to_df",
     "read_literal_mappings",
     "write_literal_mappings",
 ]
@@ -278,31 +280,40 @@ def _safe_parse_curie(x) -> Reference | None:  # type:ignore
     return Reference.from_curie(x.strip())
 
 
+def literal_mappings_to_df(literal_mappings: Iterable[LiteralMapping]) -> pandas.DataFrame:
+    """Get a pandas dataframe from the literal mappings."""
+    import pandas as pd
+
+    df = pd.DataFrame(
+        (literal_mapping._as_row() for literal_mapping in literal_mappings), columns=HEADER
+    )
+
+    # remove any columns that are fully blank
+    for col in df.columns:
+        if df[col].isna().all():
+            del df[col]
+
+    return df
+
+
 def write_literal_mappings(path: str | Path, literal_mappings: Iterable[LiteralMapping]) -> None:
     """Write literal mappings to a path."""
     path = Path(path).expanduser().resolve()
-    rows = (literal_mapping._as_row() for literal_mapping in literal_mappings)
     if importlib.util.find_spec("pandas"):
-        _write_pandas(path, rows)
+        _write_pandas(path, literal_mappings)
     else:
-        _write_builtin(path, rows)
+        _write_builtin(path, literal_mappings)
 
 
-def _write_builtin(path: Path, rows: Iterable[LiteralMappingTuple]) -> None:
+def _write_builtin(path: Path, literal_mappings: Iterable[LiteralMapping]) -> None:
     with path.open("w") as file:
         writer = csv.writer(file, delimiter="\t")
         writer.writerow(HEADER)
-        writer.writerows(rows)
+        writer.writerows(literal_mapping._as_row() for literal_mapping in literal_mappings)
 
 
-def _write_pandas(path: Path, rows: Iterable[LiteralMappingTuple]) -> None:
-    import pandas as pd
-
-    df = pd.DataFrame(rows, columns=HEADER)
-    remove = [col for col in HEADER if df[col].isna().all()]
-    for col in remove:
-        del df[col]
-
+def _write_pandas(path: Path, literal_mappings: Iterable[LiteralMapping]) -> None:
+    df = literal_mappings_to_df(literal_mappings)
     df.to_csv(path, index=False, sep="\t")
 
 
