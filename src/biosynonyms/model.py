@@ -297,9 +297,13 @@ def literal_mappings_to_df(literal_mappings: Iterable[LiteralMapping]) -> pandas
     return df
 
 
-def df_to_literal_mappings(df: pandas.DataFrame) -> list[LiteralMapping]:
+def df_to_literal_mappings(
+    df: pandas.DataFrame,
+    *,
+    names: Mapping[Reference, str] | None = None,
+) -> list[LiteralMapping]:
     """Get mapping objects from a dataframe."""
-    return _from_dicts(row for _, row in df.iterrows())
+    return _from_dicts((row for _, row in df.iterrows()), names=names)
 
 
 def write_literal_mappings(path: str | Path, literal_mappings: Iterable[LiteralMapping]) -> None:
