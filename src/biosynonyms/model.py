@@ -25,6 +25,7 @@ __all__ = [
     "LiteralMapping",
     "LiteralMappingTuple",
     "append_literal_mapping",
+    "df_to_literal_mappings",
     "group_literal_mappings",
     "lint_literal_mappings",
     "literal_mappings_to_df",
@@ -294,6 +295,11 @@ def literal_mappings_to_df(literal_mappings: Iterable[LiteralMapping]) -> pandas
             del df[col]
 
     return df
+
+
+def df_to_literal_mappings(df: pandas.DataFrame) -> list[LiteralMapping]:
+    """Get mapping objects from a dataframe."""
+    return _from_dicts(row for _, row in df.iterrows())
 
 
 def write_literal_mappings(path: str | Path, literal_mappings: Iterable[LiteralMapping]) -> None:

@@ -3,6 +3,7 @@
 from .model import (
     LiteralMapping,
     LiteralMappingTuple,
+    df_to_literal_mappings,
     grounder_from_literal_mappings,
     group_literal_mappings,
     literal_mappings_to_df,
@@ -20,6 +21,7 @@ from .resources import (
 __all__ = [
     "LiteralMapping",
     "LiteralMappingTuple",
+    "df_to_literal_mappings",
     "get_gilda_terms",
     "get_grounder",
     "get_negative_synonyms",

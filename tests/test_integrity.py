@@ -142,3 +142,10 @@ class TestIntegrity(unittest.TestCase):
             reloaded_synonyms = biosynonyms.read_literal_mappings(path)
 
         self.assertEqual(synonyms, reloaded_synonyms)
+
+    def test_df_roundtrip(self) -> None:
+        """Test df roundtrip."""
+        synonyms = biosynonyms.get_positive_synonyms()[:3]  # sample just a few
+        df = biosynonyms.literal_mappings_to_df(synonyms)
+        reconstituted = biosynonyms.df_to_literal_mappings(df)
+        self.assertEqual(synonyms, reconstituted)
