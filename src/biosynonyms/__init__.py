@@ -5,6 +5,7 @@ from .model import (
     LiteralMappingTuple,
     grounder_from_literal_mappings,
     group_literal_mappings,
+    literal_mappings_to_df,
     read_literal_mappings,
     write_literal_mappings,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "get_positive_synonyms",
     "grounder_from_literal_mappings",
     "group_literal_mappings",
+    "literal_mappings_to_df",
     "load_unentities",
     "read_literal_mappings",
     "write_literal_mappings",

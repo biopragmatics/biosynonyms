@@ -19,6 +19,7 @@ from tqdm import tqdm
 
 if TYPE_CHECKING:
     import gilda
+    import pandas
 
 __all__ = [
     "LiteralMapping",
@@ -26,6 +27,7 @@ __all__ = [
     "append_literal_mapping",
     "group_literal_mappings",
     "lint_literal_mappings",
+    "literal_mappings_to_df",
     "read_literal_mappings",
     "write_literal_mappings",
 ]
@@ -276,6 +278,22 @@ def _safe_parse_curie(x) -> Reference | None:  # type:ignore
     if not isinstance(x, str) or not x.strip():
         return None
     return Reference.from_curie(x.strip())
+
+
+def literal_mappings_to_df(literal_mappings: Iterable[LiteralMapping]) -> pandas.DataFrame:
+    """Get a pandas dataframe from the literal mappings."""
+    import pandas as pd
+
+    df = pd.DataFrame(
+        (literal_mapping._as_row() for literal_mapping in literal_mappings), columns=HEADER
+    )
+
+    # remove any columns that are fully blank
+    for col in df.columns:
+        if df[col].isna().all():
+            del df[col]
+
+    return df
 
 
 def write_literal_mappings(path: str | Path, literal_mappings: Iterable[LiteralMapping]) -> None:
