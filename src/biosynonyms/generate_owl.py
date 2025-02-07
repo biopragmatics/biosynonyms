@@ -11,7 +11,7 @@ from textwrap import dedent
 from typing import Annotated, Any, TextIO
 
 import bioregistry
-from curies import Reference
+from curies import NamableReference, Reference
 from typing_extensions import Doc
 
 from biosynonyms.model import LiteralMapping, group_literal_mappings
@@ -154,7 +154,7 @@ DEFAULT_PREFIXES: dict[str, str] = {
 }
 
 
-def _get_prefixes(dd: dict[Reference, list[LiteralMapping]]) -> set[str]:
+def _get_prefixes(dd: dict[NamableReference, list[LiteralMapping]]) -> set[str]:
     return {
         reference.prefix
         for literal_mappings in dd.values()
@@ -261,12 +261,15 @@ def _write_owl_rdf(  # noqa:C901
 
         if class_definitions:
             file.write(f"\n{reference.curie} a owl:Class ;\n")
-            try:
-                name = next(synonym.name for synonym in literal_mappings if synonym.name)
-            except StopIteration:
-                pass  # could not extract a name, no worries!
+            if reference.name:
+                mains.append(f'rdfs:label "{_clean_str(reference.name)}"')
             else:
-                mains.append(f'rdfs:label "{_clean_str(name)}"')
+                try:
+                    name = next(synonym.name for synonym in literal_mappings if synonym.name)
+                except StopIteration:
+                    pass  # could not extract a name, no worries!
+                else:
+                    mains.append(f'rdfs:label "{_clean_str(name)}"')
         else:
             file.write(f"\n{reference.curie} ")
 

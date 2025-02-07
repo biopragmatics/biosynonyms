@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias
 
 import requests
-from curies import NamedReference, Reference
+from curies import NamableReference, NamedReference, Reference
 from curies import vocabulary as v
 from pydantic import BaseModel, Field
 from pydantic_extra_types.language_code import LanguageAlpha2
@@ -39,7 +39,7 @@ class LiteralMappingTuple(NamedTuple):
 
     text: str
     curie: str
-    name: str
+    name: str | None
     predicate: str
     type: str | None
     provenance: str | None
@@ -67,7 +67,7 @@ class LiteralMapping(BaseModel):
     """A data model for literal mappings."""
 
     # the first four fields are the core of the literal mapping
-    reference: NamedReference = Field(..., description="The subject of the literal mapping")
+    reference: NamableReference = Field(..., description="The subject of the literal mapping")
     predicate: Reference = Field(
         default=DEFAULT_PREDICATE,
         description="The predicate that connects the term (as subject) "
@@ -114,8 +114,8 @@ class LiteralMapping(BaseModel):
         return rv
 
     @property
-    def name(self) -> str:
-        """Get the reference's name."""
+    def name(self) -> str | None:
+        """Get the reference's (optional) name."""
         return self.reference.name
 
     @property
@@ -136,10 +136,10 @@ class LiteralMapping(BaseModel):
     ) -> LiteralMapping:
         """Parse a dictionary representing a row in a TSV."""
         reference = Reference.from_curie(row["curie"])
-        name = (names or {}).get(reference) or row.get("name") or row["text"]
+        name = (names or {}).get(reference) or row.get("name")
         data = {
             "text": row["text"],
-            "reference": NamedReference(
+            "reference": NamableReference(
                 prefix=reference.prefix, identifier=reference.identifier, name=name
             ),
             "predicate": (
@@ -403,9 +403,9 @@ def _from_dicts(
 
 def group_literal_mappings(
     literal_mappings: Iterable[LiteralMapping],
-) -> dict[Reference, list[LiteralMapping]]:
+) -> dict[NamableReference, list[LiteralMapping]]:
     """Aggregate literal mappings by reference."""
-    dd: defaultdict[Reference, list[LiteralMapping]] = defaultdict(list)
+    dd: defaultdict[NamableReference, list[LiteralMapping]] = defaultdict(list)
     for literal_mapping in tqdm(
         literal_mappings, unit="literal mapping", unit_scale=True, leave=False
     ):
