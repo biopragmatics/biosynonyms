@@ -49,7 +49,7 @@ class TestIntegrity(unittest.TestCase):
                 (
                     text,
                     curie,
-                    _name,
+                    name,
                     predicate,
                     synonym_type,
                     references,
@@ -59,6 +59,7 @@ class TestIntegrity(unittest.TestCase):
                     _comment,
                     _src,
                 ) = row
+                self.assertTrue(name, msg="name must be filled in")
                 self.assertLess(1, len(text), msg="can not have 1 letter synonyms")
                 self.assert_curie(curie)
                 self.assertIn(predicate, SYNONYM_PREDICATE_CURIES)

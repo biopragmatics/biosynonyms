@@ -261,12 +261,15 @@ def _write_owl_rdf(  # noqa:C901
 
         if class_definitions:
             file.write(f"\n{reference.curie} a owl:Class ;\n")
-            try:
-                name = next(synonym.name for synonym in literal_mappings if synonym.name)
-            except StopIteration:
-                pass  # could not extract a name, no worries!
+            if reference.name:
+                mains.append(f'rdfs:label "{_clean_str(reference.name)}"')
             else:
-                mains.append(f'rdfs:label "{_clean_str(name)}"')
+                try:
+                    name = next(synonym.name for synonym in literal_mappings if synonym.name)
+                except StopIteration:
+                    pass  # could not extract a name, no worries!
+                else:
+                    mains.append(f'rdfs:label "{_clean_str(name)}"')
         else:
             file.write(f"\n{reference.curie} ")
 

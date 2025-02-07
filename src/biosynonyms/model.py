@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias
 
 import requests
-from curies import NamedReference, Reference
+from curies import NamableReference, NamedReference, Reference
 from curies import vocabulary as v
 from pydantic import BaseModel, Field
 from pydantic_extra_types.language_code import LanguageAlpha2
@@ -67,7 +67,7 @@ class LiteralMapping(BaseModel):
     """A data model for literal mappings."""
 
     # the first four fields are the core of the literal mapping
-    reference: NamedReference = Field(..., description="The subject of the literal mapping")
+    reference: NamableReference = Field(..., description="The subject of the literal mapping")
     predicate: Reference = Field(
         default=DEFAULT_PREDICATE,
         description="The predicate that connects the term (as subject) "
@@ -114,8 +114,8 @@ class LiteralMapping(BaseModel):
         return rv
 
     @property
-    def name(self) -> str:
-        """Get the reference's name."""
+    def name(self) -> str | None:
+        """Get the reference's (optional) name."""
         return self.reference.name
 
     @property
@@ -403,9 +403,9 @@ def _from_dicts(
 
 def group_literal_mappings(
     literal_mappings: Iterable[LiteralMapping],
-) -> dict[Reference, list[LiteralMapping]]:
+) -> dict[NamableReference, list[LiteralMapping]]:
     """Aggregate literal mappings by reference."""
-    dd: defaultdict[Reference, list[LiteralMapping]] = defaultdict(list)
+    dd: defaultdict[NamableReference, list[LiteralMapping]] = defaultdict(list)
     for literal_mapping in tqdm(
         literal_mappings, unit="literal mapping", unit_scale=True, leave=False
     ):
