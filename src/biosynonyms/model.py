@@ -39,7 +39,7 @@ class LiteralMappingTuple(NamedTuple):
 
     text: str
     curie: str
-    name: str
+    name: str | None
     predicate: str
     type: str | None
     provenance: str | None

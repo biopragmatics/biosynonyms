@@ -11,7 +11,7 @@ from textwrap import dedent
 from typing import Annotated, Any, TextIO
 
 import bioregistry
-from curies import Reference
+from curies import NamableReference, Reference
 from typing_extensions import Doc
 
 from biosynonyms.model import LiteralMapping, group_literal_mappings
@@ -154,7 +154,7 @@ DEFAULT_PREFIXES: dict[str, str] = {
 }
 
 
-def _get_prefixes(dd: dict[Reference, list[LiteralMapping]]) -> set[str]:
+def _get_prefixes(dd: dict[NamableReference, list[LiteralMapping]]) -> set[str]:
     return {
         reference.prefix
         for literal_mappings in dd.values()
