@@ -136,10 +136,10 @@ class LiteralMapping(BaseModel):
     ) -> LiteralMapping:
         """Parse a dictionary representing a row in a TSV."""
         reference = Reference.from_curie(row["curie"])
-        name = (names or {}).get(reference) or row.get("name") or row["text"]
+        name = (names or {}).get(reference) or row.get("name")
         data = {
             "text": row["text"],
-            "reference": NamedReference(
+            "reference": NamableReference(
                 prefix=reference.prefix, identifier=reference.identifier, name=name
             ),
             "predicate": (
