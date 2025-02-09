@@ -1,6 +1,6 @@
 """Sort the synonyms file."""
 
-from biosynonyms.model import lint_literal_mappings
+from ssslm import lint_literal_mappings
 
 from .resources import (
     NEGATIVES_PATH,

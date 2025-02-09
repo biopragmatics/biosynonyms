@@ -3,13 +3,14 @@
 import tempfile
 import unittest
 from collections import Counter
+from collections.abc import Sequence
 from pathlib import Path
 
 import bioregistry
+import ssslm
 from curies import ReferenceTuple
 
 import biosynonyms
-from biosynonyms.model import _sort_key
 from biosynonyms.resources import (
     NEGATIVES_PATH,
     POSITIVES_PATH,
@@ -17,6 +18,11 @@ from biosynonyms.resources import (
     UNENTITIES_PATH,
     _unentities_key,
 )
+
+
+def _sort_key(row: Sequence[str]) -> tuple[str, str, str, str]:
+    """Return a key for sorting a row."""
+    return row[0].casefold(), row[0], row[1].casefold(), row[1]
 
 
 class TestIntegrity(unittest.TestCase):
@@ -139,14 +145,14 @@ class TestIntegrity(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as d:
             path = Path(d).joinpath("test.tsv")
-            biosynonyms.write_literal_mappings(path, synonyms)
-            reloaded_synonyms = biosynonyms.read_literal_mappings(path)
+            ssslm.write_literal_mappings(synonyms, path)
+            reloaded_synonyms = ssslm.read_literal_mappings(path)
 
         self.assertEqual(synonyms, reloaded_synonyms)
 
     def test_df_roundtrip(self) -> None:
         """Test df roundtrip."""
         synonyms = biosynonyms.get_positive_synonyms()[:3]  # sample just a few
-        df = biosynonyms.literal_mappings_to_df(synonyms)
-        reconstituted = biosynonyms.df_to_literal_mappings(df)
+        df = ssslm.literal_mappings_to_df(synonyms)
+        reconstituted = ssslm.df_to_literal_mappings(df)
         self.assertEqual(synonyms, reconstituted)

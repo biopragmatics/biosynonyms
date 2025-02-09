@@ -61,13 +61,14 @@ dependencies = [
     "pydantic_extra_types",
     "pycountry",
     "typing_extensions",
+    "ssslm",
 ]
 
 [project.optional-dependencies]
 tests = [
     "pytest",
     "coverage",
-    "gilda",
+    "gilda-slim",
     "pandas",
 ]
 docs = [

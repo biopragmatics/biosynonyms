@@ -12,9 +12,9 @@ from typing import Annotated, Any, TextIO
 
 import bioregistry
 from curies import NamableReference, Reference
+from ssslm import LiteralMapping, group_literal_mappings
 from typing_extensions import Doc
 
-from biosynonyms.model import LiteralMapping, group_literal_mappings
 from biosynonyms.resources import get_positive_synonyms
 
 HERE = Path(__file__).parent.resolve()
