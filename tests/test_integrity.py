@@ -128,11 +128,11 @@ class TestIntegrity(unittest.TestCase):
 
     def test_gilda(self):
         """Test getting gilda terms."""
-        grounder = biosynonyms.get_grounder()
-        scored_matches = grounder.ground("YAL021C")
-        self.assertEqual(1, len(scored_matches))
-        self.assertEqual("sgd", scored_matches[0].term.db)
-        self.assertEqual("S000000019", scored_matches[0].term.id)
+        grounder = biosynonyms.make_grounder()
+        matches = grounder.get_matches("YAL021C")
+        self.assertEqual(1, len(matches))
+        self.assertEqual("sgd", matches[0].prefix)
+        self.assertEqual("S000000019", matches[0].identifier)
 
     def test_model(self):
         """Test loading the data model."""

@@ -71,6 +71,12 @@ tests = [
     "gilda-slim",
     "pandas",
 ]
+gilda = [
+    "ssslm[gilda]",
+]
+gilda-slim = [
+    "ssslm[gilda-slim]",
+]
 docs = [
     "sphinx>=8",
     "sphinx-rtd-theme>=3.0",

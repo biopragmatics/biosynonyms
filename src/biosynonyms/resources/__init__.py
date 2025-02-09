@@ -68,7 +68,7 @@ def get_gilda_terms() -> list[gilda.Term]:
     return [synonym.to_gilda() for synonym in get_positive_synonyms()]
 
 
-def get_grounder() -> gilda.Groudner:
+def get_grounder() -> gilda.Grounder:
     """Get a grounder from all positive synonyms."""
     import ssslm.ner
 
@@ -76,6 +76,6 @@ def get_grounder() -> gilda.Groudner:
     return cast(ssslm.ner.GildaGrounder, grounder)._grounder
 
 
-def make_grounder(**kwargs: Any) -> ssslm.Groudner:
+def make_grounder(**kwargs: Any) -> ssslm.Grounder:
     """Get a grounder from all positive synonyms."""
     return ssslm.make_grounder(get_positive_synonyms(), **kwargs)
