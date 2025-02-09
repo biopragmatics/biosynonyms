@@ -1,6 +1,7 @@
 """Version information for :mod:`biosynonyms`.
 
 Run with ``python -m biosynonyms.version``
+
 """
 
 import os

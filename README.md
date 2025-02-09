@@ -98,6 +98,9 @@ Here's an example of some rows in the synonyms table (with linkified CURIEs):
 | alsterpaullone  | [CHEBI:138488](https://bioregistry.io/CHEBI:138488) | [rdfs:label](https://bioregistry.io/rdfs:label)                             | [pubmed:30655881](https://bioregistry.io/pubmed:30655881)                                                            | [orcid:0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370) | en       |
 | 9-nitropaullone | [CHEBI:138488](https://bioregistry.io/CHEBI:138488) | [oboInOwl:hasExactSynonym](https://bioregistry.io/oboInOwl:hasExactSynonym) | [pubmed:11597333](https://bioregistry.io/pubmed:11597333), [pubmed:10911915](https://bioregistry.io/pubmed:10911915) | [orcid:0000-0003-4423-4370](https://bioregistry.io/orcid:0000-0003-4423-4370) | en       |
 
+Under the hood, `biosynonyms` uses [`ssslm`](https://github.com/cthoyt/ssslm)
+for the underlying data model.
+
 ### Incorrect Synonyms
 
 The [`negatives.tsv`](src/biosynonyms/resources/negatives.tsv) has the following

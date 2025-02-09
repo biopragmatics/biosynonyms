@@ -9,6 +9,7 @@ Does the following:
       with text to all entities with grounding
 
 Run with ``python -m biosynonyms.predict``
+
 """
 
 import gzip

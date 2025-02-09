@@ -31,8 +31,9 @@ class TestIntegrity(unittest.TestCase):
     def assert_curie(self, curie: str):
         """Assert a CURIE is standardized against the Bioregistry.
 
-        :param curie: A compact uniform resource identifier
-            of the form ``<prefix>:<identifier>``.
+        :param curie: A compact uniform resource identifier of the form
+            ``<prefix>:<identifier>``.
+
         """
         prefix, identifier = ReferenceTuple.from_curie(curie)
 
