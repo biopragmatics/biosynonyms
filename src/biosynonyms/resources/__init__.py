@@ -4,14 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from biosynonyms.model import (
-    PREDICATES,
-    LiteralMapping,
-    grounder_from_literal_mappings,
-    read_literal_mappings,
-)
+import ssslm
+from ssslm import PREDICATES, LiteralMapping
 
 if TYPE_CHECKING:
     import gilda
@@ -59,12 +55,12 @@ def write_unentities(rows: Iterable[tuple[str, str]]) -> None:
 
 def get_positive_synonyms() -> list[LiteralMapping]:
     """Get positive synonyms curated in Biosynonyms."""
-    return read_literal_mappings(POSITIVES_PATH)
+    return ssslm.read_literal_mappings(POSITIVES_PATH)
 
 
 def get_negative_synonyms() -> list[LiteralMapping]:
     """Get negative synonyms curated in Biosynonyms."""
-    return read_literal_mappings(NEGATIVES_PATH)
+    return ssslm.read_literal_mappings(NEGATIVES_PATH)
 
 
 def get_gilda_terms() -> list[gilda.Term]:
@@ -72,6 +68,14 @@ def get_gilda_terms() -> list[gilda.Term]:
     return [synonym.to_gilda() for synonym in get_positive_synonyms()]
 
 
-def get_grounder() -> gilda.Groudner:
+def get_grounder() -> gilda.Grounder:
     """Get a grounder from all positive synonyms."""
-    return grounder_from_literal_mappings(get_positive_synonyms())
+    import ssslm.ner
+
+    grounder = ssslm.make_grounder(get_positive_synonyms())
+    return cast(ssslm.ner.GildaGrounder, grounder)._grounder
+
+
+def make_grounder(**kwargs: Any) -> ssslm.Grounder:
+    """Get a grounder from all positive synonyms."""
+    return ssslm.make_grounder(get_positive_synonyms(), **kwargs)
