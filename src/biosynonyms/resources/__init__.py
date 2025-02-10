@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import ssslm
-from ssslm import PREDICATES, LiteralMapping
+from ssslm import LiteralMapping
 
 if TYPE_CHECKING:
     import gilda
@@ -25,8 +25,6 @@ HERE = Path(__file__).parent.resolve()
 POSITIVES_PATH = HERE.joinpath("positives.tsv")
 NEGATIVES_PATH = HERE.joinpath("negatives.tsv")
 UNENTITIES_PATH = HERE.joinpath("unentities.tsv")
-
-SYNONYM_PREDICATE_CURIES: set[str] = {p.curie for p in PREDICATES}
 
 
 def load_unentities() -> set[str]:
@@ -65,15 +63,13 @@ def get_negative_synonyms() -> list[LiteralMapping]:
 
 def get_gilda_terms() -> list[gilda.Term]:
     """Get Gilda terms for all positive synonyms."""
-    return [synonym.to_gilda() for synonym in get_positive_synonyms()]
+    return ssslm.literal_mappings_to_gilda(get_positive_synonyms())
 
 
 def get_grounder() -> gilda.Grounder:
     """Get a grounder from all positive synonyms."""
-    import ssslm.ner
-
-    grounder = ssslm.make_grounder(get_positive_synonyms())
-    return cast(ssslm.ner.GildaGrounder, grounder)._grounder
+    grounder = ssslm.GildaGrounder.from_literal_mappings(get_positive_synonyms())
+    return grounder._grounder
 
 
 def make_grounder(**kwargs: Any) -> ssslm.Grounder:

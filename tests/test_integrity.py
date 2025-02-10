@@ -11,13 +11,9 @@ import ssslm
 from curies import ReferenceTuple
 
 import biosynonyms
-from biosynonyms.resources import (
-    NEGATIVES_PATH,
-    POSITIVES_PATH,
-    SYNONYM_PREDICATE_CURIES,
-    UNENTITIES_PATH,
-    _unentities_key,
-)
+from biosynonyms.resources import NEGATIVES_PATH, POSITIVES_PATH, UNENTITIES_PATH, _unentities_key
+
+SYNONYM_PREDICATE_CURIES: set[str] = {p.curie for p in ssslm.PREDICATES}
 
 
 def _sort_key(row: Sequence[str]) -> tuple[str, str, str, str]:
