@@ -3,7 +3,7 @@ text	curie	name	predicate	type	provenance	contributor	date	language	comment	sour
 abema	mesh:C000590451	abemaciclib	oboInOwl:hasExactSynonym			orcid:0000-0001-9439-5346		en		biosynonyms
 adaptor protein cbl	interpro:IPR024162	Adaptor protein Cbl	oboInOwl:hasExactSynonym			orcid:0000-0003-4423-4370		en		biosynonyms
 Angiotensin-2	chebi:48432	angiotensin II	oboInOwl:hasExactSynonym			orcid:0000-0003-4423-4370		en		biosynonyms
-ATPase	eccode:3.6.1.3	adenosinetriphosphatase	oboInOwl:hasExactSynonym			orcid:0000-0003-4423-4370		en		biosynonyms
+ATPase	ec:3.6.1.3	adenosinetriphosphatase	oboInOwl:hasExactSynonym			orcid:0000-0003-4423-4370		en		biosynonyms
 ATPase	hgnc.genegroup:412	ATPases	oboInOwl:hasExactSynonym			orcid:0000-0003-4423-4370		en		biosynonyms
 cell apoptosis	go:0006915	apoptotic process	oboInOwl:hasExactSynonym			orcid:0000-0003-4423-4370		en		biosynonyms
 chronic inflammation	symp:0020026	chronic inflammation	oboInOwl:hasExactSynonym			orcid:0000-0003-4423-4370		en		biosynonyms
