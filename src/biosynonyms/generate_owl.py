@@ -10,8 +10,8 @@ import ssslm.ontology
 from biosynonyms.resources import get_positive_synonyms
 
 __all__ = [
-    "TTL_PATH",
     "METADATA",
+    "TTL_PATH",
     "write_owl_rdf",
 ]
 
@@ -29,7 +29,7 @@ METADATA = ssslm.ontology.Metadata(
     license="https://creativecommons.org/publicdomain/zero/1.0/",
     comments=[
         "Built by https://github.com/biopragmatics/biosynonyms",
-    ]
+    ],
 )
 
 
