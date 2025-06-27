@@ -25,9 +25,9 @@ from typing import TYPE_CHECKING
 
 import bioregistry
 import click
-import gilda
 import pandas as pd
 import pystow
+import ssslm
 from curies import ReferenceTuple
 from indra.assemblers.indranet.assembler import NS_PRIORITY_LIST
 from indra.statements import (
@@ -74,26 +74,18 @@ def norm(s: str) -> str:
     return s.strip().replace("\t", " ").replace("\n", " ").replace("  ", " ")
 
 
-def _norm_strict(prefix: str, identifier: str) -> ReferenceTuple:
-    norm_prefix, norm_identifier = bioregistry.normalize_parsed_curie(prefix, identifier)  # type:ignore [attr-defined]
-    if not norm_prefix or not norm_identifier:
-        raise ValueError
-    return ReferenceTuple(norm_prefix, norm_identifier)
-
-
-def get_agent_curie_tuple(agent: Agent, *, grounder: gilda.Grounder) -> ReferenceTuple:
+def get_agent_curie_tuple(agent: Agent, *, grounder: ssslm.Grounder) -> ReferenceTuple:
     """Return a tuple of name space, id from an Agent's db_refs."""
     for prefix in NS_PRIORITY_LIST:
         if prefix in agent.db_refs:
-            return _norm_strict(prefix, agent.db_refs[prefix])
+            return bioregistry.normalize_parsed_curie(prefix, agent.db_refs[prefix], strict=True)
 
     norm_agent_name = norm(agent.name)
-    scored_matches = grounder.ground(norm_agent_name)
-    if not scored_matches:
+    scored_match = grounder.get_best_match(norm_agent_name)
+    if not scored_match:
         return ReferenceTuple(TEXT_PREFIX, norm_agent_name)
 
-    scored_match = scored_matches[0]
-    return _norm_strict(scored_match.term.db, scored_match.term.id)
+    return scored_match.reference.pair
 
 
 @click.command()
@@ -130,22 +122,19 @@ def main(size: int, force: bool) -> None:
         plt.close(fig)
 
 
-def get_grounder() -> gilda.Grounder:
-    """Get a Gilda grounder."""
-    # TODO get both gilda built in plus extras from positives
-    raise NotImplementedError
+def get_grounder() -> ssslm.Grounder:
+    """Get a grounder."""
+    return ssslm.GildaGrounder.default()
 
 
 def get_graph(force: bool = False, *, multiprocessing: bool = False) -> "ensmallen.Graph":
-    """Get a the undirected INDRA graph."""
+    """Get an undirected INDRA graph."""
     if not PAIRS_PATH.exists() or force:
         click.echo("loading non-entities")
         unentities = load_unentities()
 
-        click.echo("Getting up Gilda grounder")
+        click.echo("Get grounder")
         grounder = get_grounder()
-        click.echo("Warming up grounder")
-        grounder.ground("k-ras")
 
         func = partial(_line_to_rows, unentities=unentities, grounder=grounder)
 
@@ -218,7 +207,7 @@ def _iter_names_from_rows(sorted_rows: Iterable[Row]) -> Iterable[str]:
             yield target.identifier
 
 
-def _line_to_rows(line: str, unentities: set[str], grounder: gilda.Grounder) -> Rows:
+def _line_to_rows(line: str, unentities: set[str], grounder: ssslm.Grounder) -> Rows:
     _assembled_hash, stmt_json_str = line.split("\t", 1)
     # why won't it strip the extra?!?!
     stmt_json_str = stmt_json_str.replace('""', '"').strip('"')[:-2]
@@ -230,7 +219,7 @@ def _rows_from_stmt(  # noqa:C901
     stmt: Statement,
     *,
     unentities: set[str],
-    grounder: gilda.Grounder,
+    grounder: ssslm.Grounder,
     complex_members: int = 3,
 ) -> Rows:
     not_none_agents = stmt.real_agent_list()
