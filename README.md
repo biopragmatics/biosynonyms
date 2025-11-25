@@ -46,8 +46,8 @@ import biosynonyms
 positive_synonyms = biosynonyms.get_positive_synonyms()
 negative_synonyms = biosynonyms.get_negative_synonyms()
 
-# Get ready for use in NER with Gilda, only using positive synonyms
-gilda_terms = biosynonyms.get_gilda_terms()
+# Get a grounder ready for doing named entity normalization
+grounder = biosynonyms.get_grounder()
 ```
 
 ### Synonyms
