@@ -9,9 +9,10 @@ from pathlib import Path
 import bioregistry
 import ssslm
 from curies import ReferenceTuple
+from ssslm import Repository
 
 import biosynonyms
-from biosynonyms.resources import NEGATIVES_PATH, POSITIVES_PATH, UNENTITIES_PATH, _unentities_key
+from biosynonyms.resources import NEGATIVES_PATH, POSITIVES_PATH, UNENTITIES_PATH
 
 SYNONYM_PREDICATE_CURIES: set[str] = {p.curie for p in ssslm.PREDICATES}
 
@@ -29,7 +30,6 @@ class TestIntegrity(unittest.TestCase):
 
         :param curie: A compact uniform resource identifier of the form
             ``<prefix>:<identifier>``.
-
         """
         prefix, identifier = ReferenceTuple.from_curie(curie)
 
@@ -115,7 +115,7 @@ class TestIntegrity(unittest.TestCase):
         """Test each row of the non-entities file."""
         with UNENTITIES_PATH.open() as file:
             _header, *rows = (line.strip().split("\t") for line in file)
-        self.assertEqual(sorted(rows, key=_unentities_key), rows)
+        self.assertEqual(sorted(rows, key=Repository._stop_words_key), rows)
         for line_number, line in enumerate(rows, start=1):
             with self.subTest(line_number=line_number):
                 self.assertEqual(2, len(line))
