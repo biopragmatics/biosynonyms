@@ -41,13 +41,14 @@ Here's how to get the data:
 
 ```python
 import biosynonyms
+import ssslm
 
 # Uses an internal data structure
-positive_synonyms = biosynonyms.get_positive_synonyms()
-negative_synonyms = biosynonyms.get_negative_synonyms()
+positive_synonyms: list[ssslm.LiteralMapping] = biosynonyms.get_positive_synonyms()
+negative_synonyms: list[ssslm.LiteralMapping] = biosynonyms.get_negative_synonyms()
 
 # Get a grounder ready for doing named entity normalization
-grounder = biosynonyms.get_grounder()
+grounder: ssslm.Grounder = biosynonyms.get_grounder()
 ```
 
 ### Synonyms
