@@ -61,7 +61,7 @@ dependencies = [
     "pydantic_extra_types",
     "pycountry",
     "typing_extensions",
-    "ssslm>=0.0.17",
+    "ssslm>=0.1.3",
 ]
 
 [project.optional-dependencies]

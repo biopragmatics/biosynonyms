@@ -90,7 +90,7 @@ def get_agent_curie_tuple(agent: Agent, *, grounder: ssslm.Grounder) -> Referenc
 
 @click.command()
 @click.option("--size", type=int, default=32)
-@force_option  # type:ignore
+@force_option
 def main(size: int, force: bool) -> None:
     """Generate synonym predictions."""
     if not EMBEDDINGS_PATH.is_file() or force:
