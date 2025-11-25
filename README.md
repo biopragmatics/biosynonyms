@@ -1,8 +1,6 @@
-<!--
 <p align="center">
-  <img src="https://github.com/biopragmatics/biosynonyms/raw/main/docs/source/logo.png" height="150">
+  <img src="https://biopragmatics.github.io/img/biosynonyms.png" height="150">
 </p>
--->
 
 <h1 align="center">
   Biosynonyms
@@ -27,9 +25,10 @@
         <img src='https://img.shields.io/badge/code%20style-black-000000.svg' alt='Code style: black' /></a>
     <a href="https://github.com/biopragmatics/biosynonyms/blob/main/.github/CODE_OF_CONDUCT.md">
         <img src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg" alt="Contributor Covenant"/></a>
+    <a href="https://zenodo.org/doi/10.5281/zenodo.10592265">
+        <img src="https://zenodo.org/badge/490189661.svg" alt="DOI"></a>
 </p>
 
-<a href="https://zenodo.org/doi/10.5281/zenodo.10592265"><img src="https://zenodo.org/badge/490189661.svg" alt="DOI"></a>
 
 A decentralized database of synonyms for biomedical entities and concepts. This
 resource is meant to be complementary to ontologies, databases, and other
