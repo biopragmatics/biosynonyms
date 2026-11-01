@@ -153,7 +153,7 @@ def get_graph(force: bool = False, *, multiprocessing: bool = False) -> "ensmall
             click.echo(f"Opened {file.name}")
 
             if multiprocessing:
-                groups = process_map(  # type:ignore[call-overload]
+                groups = process_map(
                     func,
                     file,
                     **tqdm_kwargs,
@@ -161,7 +161,7 @@ def get_graph(force: bool = False, *, multiprocessing: bool = False) -> "ensmall
                     chunksize=300_000,
                 )
             else:
-                groups = map(func, tqdm(file, **tqdm_kwargs))  # type:ignore[call-overload]
+                groups = map(func, tqdm(file, **tqdm_kwargs))
             rows: set[Row] = set(itt.chain.from_iterable(groups))
 
         sorted_rows = sorted(rows)
