@@ -17,7 +17,7 @@ import itertools as itt
 import json
 import logging
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from functools import partial
 from itertools import permutations
 from pathlib import Path
@@ -136,7 +136,9 @@ def get_graph(force: bool = False, *, multiprocessing: bool = False) -> "ensmall
         click.echo("Get grounder")
         grounder = get_grounder()
 
-        func = partial(_line_to_rows, unentities=unentities, grounder=grounder)
+        func: Callable[[str], Rows] = partial(
+            _line_to_rows, unentities=unentities, grounder=grounder
+        )
 
         click.echo("Ensuring INDRA statements from S3")
         input_path = ensure_procesed_statements()
@@ -151,18 +153,16 @@ def get_graph(force: bool = False, *, multiprocessing: bool = False) -> "ensmall
             click.echo(f"Opened {file.name}")
 
             if multiprocessing:
-                groups = process_map(
+                groups = process_map(  # type:ignore[call-overload]
                     func,
                     file,
                     **tqdm_kwargs,
                     max_workers=4,
                     chunksize=300_000,
                 )
-                rows: set[Row] = set(itt.chain.from_iterable(groups))
             else:
-                rows = set(
-                    itt.chain.from_iterable(func(line) for line in tqdm(file, **tqdm_kwargs))
-                )
+                groups = map(func, tqdm(file, **tqdm_kwargs))  # type:ignore[call-overload]
+            rows: set[Row] = set(itt.chain.from_iterable(groups))
 
         sorted_rows = sorted(rows)
 

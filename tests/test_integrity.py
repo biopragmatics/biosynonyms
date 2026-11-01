@@ -25,7 +25,7 @@ def _sort_key(row: Sequence[str]) -> tuple[str, str, str, str]:
 class TestIntegrity(unittest.TestCase):
     """Test case for data integrity tests."""
 
-    def assert_curie(self, curie: str):
+    def assert_curie(self, curie: str) -> None:
         """Assert a CURIE is standardized against the Bioregistry.
 
         :param curie: A compact uniform resource identifier of the form
@@ -41,7 +41,7 @@ class TestIntegrity(unittest.TestCase):
         if pattern:
             self.assertRegex(identifier, pattern)
 
-    def test_positives(self):
+    def test_positives(self) -> None:
         """Test each row in the positives file."""
         with POSITIVES_PATH.open() as file:
             _, *rows = (tuple(line.strip().split("\t")) for line in file)
@@ -83,7 +83,7 @@ class TestIntegrity(unittest.TestCase):
         duplicated = {key: count for key, count in c.items() if count > 1}
         self.assertEqual(0, len(duplicated), msg=f"duplicated entries: {duplicated}")
 
-    def test_negatives(self):
+    def test_negatives(self) -> None:
         """Test each row in the negatives file."""
         with NEGATIVES_PATH.open() as file:
             _, *rows = (tuple(line.strip().split("\t")) for line in file)
@@ -111,7 +111,7 @@ class TestIntegrity(unittest.TestCase):
         duplicated = {key: count for key, count in c.items() if count > 1}
         self.assertEqual(0, len(duplicated), msg=f"duplicated entries: {duplicated}")
 
-    def test_non_entities(self):
+    def test_non_entities(self) -> None:
         """Test each row of the non-entities file."""
         with UNENTITIES_PATH.open() as file:
             _header, *rows = (line.strip().split("\t") for line in file)
@@ -123,7 +123,7 @@ class TestIntegrity(unittest.TestCase):
                 self.assertEqual(text.strip(), text)
                 self.assertTrue(bioregistry.is_valid_identifier("orcid", orcid))
 
-    def test_gilda(self):
+    def test_gilda(self) -> None:
         """Test getting gilda terms."""
         grounder = biosynonyms.make_grounder()
         matches = grounder.get_matches("YAL021C")
@@ -131,7 +131,7 @@ class TestIntegrity(unittest.TestCase):
         self.assertEqual("sgd", matches[0].prefix)
         self.assertEqual("S000000019", matches[0].identifier)
 
-    def test_model(self):
+    def test_model(self) -> None:
         """Test loading the data model."""
         biosynonyms.get_positive_synonyms()
         biosynonyms.get_negative_synonyms()

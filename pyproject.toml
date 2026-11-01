@@ -1,7 +1,6 @@
-# See https://setuptools.readthedocs.io/en/latest/build_meta.html
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.13.0,<1.0"]
+build-backend = "uv_build"
 
 [project]
 name = "biosynonyms"
@@ -21,15 +20,16 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Framework :: Pytest",
     "Framework :: tox",
     "Framework :: Sphinx",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: 3 :: Only",
     "Framework :: Pydantic",
     "Framework :: Pydantic :: 2",
@@ -49,18 +49,19 @@ keywords = [
 # License Information. This can be any valid SPDX identifiers that can be resolved
 # with URLs like https://spdx.org/licenses/MIT
 # See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "click",
     "tqdm",
-    "curies>=0.10.4",
-    "bioregistry",
+    "curies>=0.15.0",
+    "bioregistry>=0.15.0",
     "pydantic>=2.0",
-    "pydantic_extra_types",
+    "pydantic-extra-types",
     "pycountry",
-    "typing_extensions",
+    "typing-extensions",
     "ssslm>=0.1.3",
 ]
 
@@ -109,17 +110,6 @@ predict = [
 Homepage = "https://github.com/biopragmatics/biosynonyms"
 Repository = "https://github.com/biopragmatics/biosynonyms.git"
 Documentation = "https://biosynonyms.readthedocs.io"
-
-[tool.setuptools]
-package-dir = { "" = "src" }
-
-[tool.setuptools.packages.find]
-# this implicitly sets `packages = ":find"`
-where = ["src"]  # list of folders that contain the packages (["."] by default)
-
-# See https://setuptools.pypa.io/en/latest/userguide/datafiles.html
-[tool.setuptools.package-data]
-"*" = ["*.*"]
 
 [tool.cruft]
 skip = [
